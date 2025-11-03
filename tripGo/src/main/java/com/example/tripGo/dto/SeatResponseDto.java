@@ -3,9 +3,11 @@ package com.example.tripGo.dto;
 
 import com.example.tripGo.entity.type.DeckType;
 import com.example.tripGo.entity.type.SeatType;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 public class SeatResponseDto {
     private Long seatId;
     private String seatNumber;

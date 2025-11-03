@@ -3,8 +3,8 @@ package com.example.tripGo.dto;
 import com.example.tripGo.entity.type.AcType;
 import com.example.tripGo.entity.type.BusSeatType;
 import lombok.Data;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class BusResponseDto {
@@ -17,5 +17,5 @@ public class BusResponseDto {
     private Integer totalSeats;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    List<SeatResponseDto> seats;
+    private List<SeatResponseDto> seats;
 }

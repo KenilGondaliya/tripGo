@@ -38,9 +38,16 @@ public class SeatService {
                 })
                 .toList();
 
-        return seatRepository.saveAll(seats).stream()
-                .map(s -> modelMapper.map(s, SeatResponseDto.class))
-                .toList();
+        try {
+            return seatRepository.saveAll(seats)
+                    .stream()
+                    .map(seat -> modelMapper.map(seat, SeatResponseDto.class))
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+
     }
 
     public SeatResponseDto update(Long busId, Long seatId, SeatRequestDto dto) {

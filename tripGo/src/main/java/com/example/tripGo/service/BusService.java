@@ -57,4 +57,9 @@ public class BusService {
         busRepository.findById(id).ifPresent(busRepository::delete);
     }
 
+    public Page<BusResponseDto> searchBusesByRoute(String from, String to, Pageable p) {
+        Page<Bus> buses = busRepository.findByRoutesStartPointContainingIgnoreCaseAndRoutesEndPointContainingIgnoreCase(
+                from, to, p);
+        return buses.map(b -> mapper.map(b, BusResponseDto.class));
+    }
 }

@@ -3,6 +3,7 @@ package com.example.tripGo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -25,6 +26,26 @@ public class RoutePoint {
     @Column(nullable = false, length = 100)
     private String locationName;
 
-//    @Column(nullable = false)
-//    private Integer sequenceNo;
+    @Column(nullable = false)
+    private Integer sequenceNo;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (sequenceNo == null) {
+            sequenceNo = 0;
+        }
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

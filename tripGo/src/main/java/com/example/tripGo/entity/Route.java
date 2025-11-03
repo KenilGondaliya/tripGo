@@ -3,6 +3,7 @@ package com.example.tripGo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ public class Route {
 
     private Integer totalDistance;
 
-    private LocalTime totalTravelTime;
+    private String totalTravelTime;
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoutePoint> routePoints = new ArrayList<>();
@@ -43,4 +44,20 @@ public class Route {
 //    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<Schedule> schedules;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
