@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/schedules")
+@RequestMapping("/admin/schedules")
 @RequiredArgsConstructor
 public class ScheduleController {
 
@@ -22,6 +22,7 @@ public class ScheduleController {
 
     @PostMapping
     public ResponseEntity<ScheduleResponseDto> create(@Valid @RequestBody ScheduleRequestDto dto) {
+        System.out.println("Received Schedule DTO: " + dto);
         return ResponseEntity.status(201).body(scheduleService.create(dto));
     }
 

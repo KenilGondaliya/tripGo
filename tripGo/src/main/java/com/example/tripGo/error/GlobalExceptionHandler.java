@@ -42,7 +42,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAll(Exception ex, HttpServletRequest req) {
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(error(req, 500, "Internal Error", "Something went wrong"));
+                .body(error(req, 500, "Internal Error", ex.getMessage()));
     }
 }

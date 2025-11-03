@@ -24,5 +24,4 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("start") String start,
             @Param("end") String end,
             Pageable pageable);
-
 }

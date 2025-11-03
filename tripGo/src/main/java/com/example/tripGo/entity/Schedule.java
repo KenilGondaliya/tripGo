@@ -4,6 +4,7 @@ package com.example.tripGo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -40,7 +41,7 @@ public class Schedule {
     @Column(nullable = false)
     private LocalTime endTime;
 
-    private LocalTime totalTravelTime;
+    private String totalTravelTime;
 
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SchedulePoint> schedulePoints;
