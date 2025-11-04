@@ -1,5 +1,6 @@
 package com.example.tripGo.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,10 +12,10 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SchedulePointRequestDto {
-    @NotNull
-    Long routePointId;
-    LocalTime arrivalTime;
-    LocalTime departureTime;
-    boolean isBoardingPoint;
-    boolean isDroppingPoint;
+    @NotBlank(message = "Location name is required")
+    private String locationName;
+    private LocalTime arrivalTime;
+    private LocalTime departureTime;
+    private boolean isBoardingPoint;
+    private boolean isDroppingPoint;
 }

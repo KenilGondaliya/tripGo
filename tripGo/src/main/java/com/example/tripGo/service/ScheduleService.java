@@ -54,38 +54,6 @@ public class ScheduleService {
         return page.map(this::toSummary);
     }
 
-    public List<SchedulePointResponseDto> addPoints(Long scheduleId, List<SchedulePointRequestDto> dtos) {
-        Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found"));
-
-        List<SchedulePoint> points = dtos.stream()
-                .map(dto -> {
-                    RoutePoint rp = routePointRepository.findById(dto.getRoutePointId())
-                            .orElseThrow(() -> new ResourceNotFoundException("RoutePoint not found"));
-                    return SchedulePoint.builder()
-                            .schedule(schedule)
-                            .routePoint(rp)
-                            .arrivalTime(dto.getArrivalTime())
-                            .departureTime(dto.getDepartureTime())
-                            .isBoardingPoint(dto.isBoardingPoint())
-                            .isDroppingPoint(dto.isDroppingPoint())
-                            .build();
-                })
-                .toList();
-
-        return schedulePointRepository
-                .saveAll(points).stream()
-                .map(p -> {
-                    SchedulePointResponseDto dto = new SchedulePointResponseDto();
-                    dto.setLocationName(p.getRoutePoint().getLocationName());
-                    dto.setArrival(p.getArrivalTime());
-                    dto.setDeparture(p.getDepartureTime());
-                    dto.setBoarding(p.isBoardingPoint());
-                    dto.setDropping(p.isDroppingPoint());
-                    return dto;
-                })
-                .toList();
-    }
 
     private ScheduleResponseDto toSummary(Schedule s) {
         ScheduleResponseDto dto = new ScheduleResponseDto();
@@ -99,16 +67,17 @@ public class ScheduleService {
         dto.setEndTime(s.getEndTime());
         dto.setAvailableSeats(s.getBus().getTotalSeats());
 
+        // NEW: Direct from SchedulePoint (no RoutePoint!)
         List<SchedulePointResponseDto> points = schedulePointRepository
-                .findBySchedule_ScheduleIdOrderByRoutePoint_SequenceNoAsc(s.getScheduleId())
+                .findBySchedule_ScheduleIdOrderByDepartureTimeAsc(s.getScheduleId())
                 .stream()
                 .map(p -> {
                     SchedulePointResponseDto pd = new SchedulePointResponseDto();
-                    pd.setLocationName(p.getRoutePoint().getLocationName());
-                    pd.setArrival(p.getArrivalTime());
-                    pd.setDeparture(p.getDepartureTime());
-                    pd.setBoarding(p.isBoardingPoint());
-                    pd.setDropping(p.isDroppingPoint());
+                    pd.setLocationName(p.getLocationName());  // ← Direct!
+                    pd.setArrivalTime(p.getArrivalTime());
+                    pd.setDepartureTime(p.getDepartureTime());
+                    pd.setBoardingPoint(p.isBoardingPoint());
+                    pd.setDroppingPoint(p.isDroppingPoint());
                     return pd;
                 })
                 .toList();
@@ -117,25 +86,25 @@ public class ScheduleService {
         return dto;
     }
 
-    public List<SeatMapDto> getSeatMap(Long scheduleId) {
-        Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found"));
-
-        return seatRepository.findByBus(schedule.getBus()).stream()
-                .map(seat -> {
-                    BigDecimal price = seatPriceRepository.findByRouteAndSeat(schedule.getRoute(), seat)
-                            .map(SeatPrice::getPrice)
-                            .orElse(BigDecimal.ZERO);
-
-                    SeatMapDto dto = new SeatMapDto();
-                    dto.setSeatId(seat.getSeatId());
-                    dto.setSeatNumber(seat.getSeatNumber());
-                    dto.setSeatType(seat.getSeatType().name());
-                    dto.setDeckType(seat.getDeckType() != null ? seat.getDeckType().name() : null);
-                    dto.setAvailable(true);
-                    dto.setPrice(price);
-                    return dto;
-                })
-                .toList();
-    }
+//    public List<SeatPriceResponseDto> getSeatMap(Long scheduleId) {
+//        Schedule schedule = scheduleRepository.findById(scheduleId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found"));
+//
+//        return seatRepository.findByBus(schedule.getBus()).stream()
+//                .map(seat -> {
+//                    BigDecimal price = seatPriceRepository.findByRouteAndSeat(schedule.getRoute(), seat)
+//                            .map(SeatPrice::getPrice)
+//                            .orElse(BigDecimal.ZERO);
+//
+//                    SeatPriceResponseDto dto = new SeatPriceResponseDto();
+//                    dto.setSeatId(seat.getSeatId());
+//                    dto.setSeatNumber(seat.getSeatNumber());
+//                    dto.setSeatType(seat.getSeatType().name());
+//                    dto.setDeckType(seat.getDeckType() != null ? seat.getDeckType().name() : null);
+//                    dto.setAvailable(true);
+//                    dto.setPrice(price);
+//                    return dto;
+//                })
+//                .toList();
+//    }
 }

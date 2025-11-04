@@ -12,5 +12,6 @@ import java.util.Optional;
 @Repository
 public interface SeatPriceRepository extends JpaRepository<SeatPrice, Long> {
 
-    Optional<SeatPrice> findByRouteAndSeat(Route route, Seat seat);
+    Optional<SeatPrice> findByRoute_RouteIdAndSeat_SeatId(Long routeId, Long seatId);
+    List<SeatPrice> findByRoute_RouteId(Long routeId);
 }

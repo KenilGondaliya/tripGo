@@ -44,16 +44,9 @@ public class ScheduleController {
         return scheduleService.search(date, null, null, p);
     }
 
-    @PostMapping("/{id}/points")
-    public List<SchedulePointResponseDto> addPoints(
-            @PathVariable Long id,
-            @Valid @RequestBody List<SchedulePointRequestDto> dtos) {
-        return scheduleService.addPoints(id, dtos);
-    }
-
-    @GetMapping("/{id}/seats")
-    public List<SeatMapDto> getSeatMap(@PathVariable Long id) {
-        return scheduleService.getSeatMap(id);
-    }
+//    @GetMapping("/{id}/seats")
+//    public List<SeatPriceResponseDto> getSeatMap(@PathVariable Long id) {
+//        return scheduleService.getSeatMap(id);
+//    }
 
 }

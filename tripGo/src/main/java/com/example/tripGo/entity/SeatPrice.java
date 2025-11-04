@@ -1,5 +1,6 @@
 package com.example.tripGo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,10 +21,12 @@ public class SeatPrice {
 
     @ManyToOne
     @JoinColumn(name = "route_id")
+    @JsonBackReference
     private Route route;
 
     @ManyToOne
     @JoinColumn(name = "seat_id")
+    @JsonBackReference
     private Seat seat;
 
     @Column(nullable = false, precision = 12, scale = 2)

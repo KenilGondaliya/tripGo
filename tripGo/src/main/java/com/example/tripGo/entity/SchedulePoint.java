@@ -23,9 +23,8 @@ public class SchedulePoint {
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
-    @ManyToOne
-    @JoinColumn(name = "point_id", nullable = false)
-    private RoutePoint routePoint;
+    @Column(nullable = false, length = 200)
+    private String locationName;
 
     private LocalTime arrivalTime;
     private LocalTime departureTime;
@@ -52,5 +51,4 @@ public class SchedulePoint {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }

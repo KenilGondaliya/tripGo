@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
@@ -24,4 +25,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("start") String start,
             @Param("end") String end,
             Pageable pageable);
+
+    List<Schedule> findByRoute_RouteId(Long routeId);
 }
+

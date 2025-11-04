@@ -1,5 +1,6 @@
 package com.example.tripGo.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class RoutePoint {
 
     @ManyToOne
     @JoinColumn(name = "route_id", nullable = false)
+    @JsonManagedReference
     private Route route;
 
     @Column(nullable = false, length = 100)

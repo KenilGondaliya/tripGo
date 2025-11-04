@@ -5,9 +5,10 @@ import java.time.LocalTime;
 
 @Data
 public class SchedulePointResponseDto {
+    private Long id;
     private String locationName;
-    private LocalTime arrival;
-    private LocalTime departure;
-    private boolean boarding;
-    private boolean dropping;
+    private LocalTime arrivalTime;
+    private LocalTime departureTime;
+    private boolean isBoardingPoint;
+    private boolean isDroppingPoint;
 }

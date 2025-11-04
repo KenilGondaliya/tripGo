@@ -7,7 +7,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SchedulePointRepository extends JpaRepository<SchedulePoint, Integer> {
-
-    List<SchedulePoint> findBySchedule_ScheduleIdOrderByRoutePoint_SequenceNoAsc(Long scheduleId);
+public interface SchedulePointRepository extends JpaRepository<SchedulePoint, Long> {
+    List<SchedulePoint> findBySchedule_ScheduleIdOrderByDepartureTimeAsc(Long scheduleId);
+    List<SchedulePoint> findBySchedule_ScheduleIdAndIsBoardingPointTrue(Long scheduleId);
+    List<SchedulePoint> findBySchedule_ScheduleIdAndIsDroppingPointTrue(Long scheduleId);
 }

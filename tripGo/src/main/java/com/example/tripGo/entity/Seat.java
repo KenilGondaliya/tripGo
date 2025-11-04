@@ -3,6 +3,7 @@ package com.example.tripGo.entity;
 import com.example.tripGo.entity.type.DeckType;
 import com.example.tripGo.entity.type.SeatType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,6 +47,7 @@ public class Seat {
     private DeckType deckType;  // UPPER, LOWER
 
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<SeatPrice> seatPrices = new ArrayList<>();
 
     @Column(name = "created_at")

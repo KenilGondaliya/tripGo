@@ -1,5 +1,7 @@
 package com.example.tripGo.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +25,7 @@ public class Route {
 
     @ManyToOne
     @JoinColumn(name = "bus_id", nullable = false)
+    @JsonBackReference
     private Bus bus;
 
     @Column(nullable = false, length = 100)
@@ -36,9 +39,11 @@ public class Route {
     private String totalTravelTime;
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<RoutePoint> routePoints = new ArrayList<>();
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<SeatPrice> seatPrices = new ArrayList<>();
 
 //    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)

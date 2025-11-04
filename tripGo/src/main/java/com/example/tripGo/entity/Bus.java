@@ -42,6 +42,7 @@ public class Bus {
     private Integer totalSeats;
 
     @OneToMany(mappedBy = "bus", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Route> routes = new ArrayList<>();
 
     @OneToMany(mappedBy = "bus", cascade = CascadeType.ALL, orphanRemoval = true)

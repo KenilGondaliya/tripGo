@@ -69,7 +69,6 @@ public class SeatService {
         if (!seat.getBus().getBusId().equals(busId)) {
             throw new ResourceNotFoundException("Seat does not belong to this bus");
         }
-
         seatRepository.delete(seat);
     }
 }
