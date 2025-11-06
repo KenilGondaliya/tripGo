@@ -80,12 +80,10 @@ public class BusController {
         return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/{busId}/seats")
     public ResponseEntity<List<SeatResponseDto>> getSeatsWithPrice(
             @PathVariable Long busId,
             @RequestParam Long routeId) {
         return ResponseEntity.ok(busService.getSeatsWithPrice(busId, routeId));
     }
-
 }

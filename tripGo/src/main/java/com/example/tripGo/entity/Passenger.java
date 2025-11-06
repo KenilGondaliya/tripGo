@@ -26,9 +26,9 @@ public class Passenger {
     @JoinColumn(name = "booking_id")
     private Booking booking;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id")
-    private Seat seat;
+    @OneToOne
+    @JoinColumn(name = "booking_seat_id")
+    private BookingSeat bookingSeat;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

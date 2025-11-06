@@ -19,7 +19,11 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long     paymentId;
+    private Long paymentId;
+
+    @OneToOne
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
@@ -30,9 +34,5 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
-    private LocalDateTime paymentTime;
-
-    @OneToOne
-    @JoinColumn(name = "booking_id")
-    private Booking booking;
+    private LocalDateTime paymentDate;
 }

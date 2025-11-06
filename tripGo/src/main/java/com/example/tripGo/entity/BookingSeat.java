@@ -33,6 +33,9 @@ public class BookingSeat {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
+    @OneToOne(mappedBy = "bookingSeat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Passenger passenger;
+
 
 }
 

@@ -1,0 +1,7 @@
+package com.example.tripGo.repository;
+
+import com.example.tripGo.entity.Passenger;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PassengerRepository extends JpaRepository<Passenger, Long> {
+}
