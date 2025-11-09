@@ -56,7 +56,7 @@ public class AppConfig {
         return configuration.getAuthenticationManager();
     }
 
-    @Bean
+//    @Bean
     UserDetailsService userDetailsService() {
         UserDetails user1 = User.withUsername("admin")
                 .password(passwordEncoder().encode("pass"))
@@ -70,6 +70,5 @@ public class AppConfig {
 
         return new InMemoryUserDetailsManager(user1, user2);
     }
-
 
 }

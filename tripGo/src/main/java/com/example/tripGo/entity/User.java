@@ -3,6 +3,8 @@ package com.example.tripGo.entity;
 import com.example.tripGo.entity.type.AuthProviderType;
 import com.example.tripGo.entity.type.RoleType;
 import com.example.tripGo.security.RolePermissionMapping;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -51,6 +53,10 @@ public class User implements UserDetails {
         }
         return authorities;
     }
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Customer customer;
 
     @Override public String getUsername() { return username; }
     @Override public String getPassword() { return password; }

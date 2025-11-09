@@ -38,7 +38,10 @@ public class AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword())
         );
+
+
         User user = (User) authentication.getPrincipal();
+        System.out.println("Authenticated user: " + user.getUsername());
         String token = authUtil.generateAccessToken(user);
         return new LoginResponseDto(token, user.getId());
     }
