@@ -25,7 +25,7 @@ public class AppConfig {
 
         ModelMapper mapper = new ModelMapper();
 
-        // ✅ RouteRequestDto → Route (for creation)
+        // RouteRequestDto → Route (for creation)
         mapper.addMappings(new PropertyMap<RouteRequestDto, Route>() {
             @Override
             protected void configure() {
@@ -34,7 +34,7 @@ public class AppConfig {
             }
         });
 
-        // ✅ Route → RouteResponseDto (for response)
+        // Route → RouteResponseDto (for response)
         mapper.addMappings(new PropertyMap<Route, RouteResponseDto>() {
             @Override
             protected void configure() {

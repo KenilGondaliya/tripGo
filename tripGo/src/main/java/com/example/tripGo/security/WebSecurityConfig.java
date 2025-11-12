@@ -12,7 +12,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+
+import java.util.Arrays;
 
 import static com.example.tripGo.entity.type.PermissionType.BOOKING_WRITE;
 import static com.example.tripGo.entity.type.RoleType.ADMIN;
@@ -37,13 +42,16 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessionConfig  -> sessionConfig .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/public/**").permitAll()
+                        .requestMatchers("/", "/home", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
+                        .requestMatchers("/api/v1/login").permitAll()
+                        .requestMatchers("/api/v1/public/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/booking").hasAuthority(BOOKING_WRITE.getPermission())
                         .requestMatchers("/admin/**").hasRole(ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
                         .failureHandler((request, response, exception) -> {
                             log.error("OAuth2 error: {}", exception.getMessage());
                             handlerExceptionResolver.resolveException(request, response, null, exception);
@@ -54,6 +62,17 @@ public class WebSecurityConfig {
                             handlerExceptionResolver.resolveException(request, response, null, accessDeniedException);
                 }));
         return httpSecurity.build();
+    }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(Arrays.asList("*"));  // Allow all origins (dev)
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

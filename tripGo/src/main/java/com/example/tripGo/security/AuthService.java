@@ -43,7 +43,7 @@ public class AuthService {
         User user = (User) authentication.getPrincipal();
         System.out.println("Authenticated user: " + user.getUsername());
         String token = authUtil.generateAccessToken(user);
-        return new LoginResponseDto(token, user.getId());
+        return new LoginResponseDto(token, user.getId(),user.getUsername());
     }
 
     @Transactional
@@ -107,7 +107,7 @@ public class AuthService {
 //        String token = authUtil.generateAccessToken(user);
 //        return ResponseEntity.ok(new LoginResponseDto(token, user.getId()));
 
-        LoginResponseDto loginResponseDto = new LoginResponseDto(authUtil.generateAccessToken(user), user.getId());
+        LoginResponseDto loginResponseDto = new LoginResponseDto(authUtil.generateAccessToken(user), user.getId(),user.getUsername());
         return ResponseEntity.ok(loginResponseDto);
     }
 }
