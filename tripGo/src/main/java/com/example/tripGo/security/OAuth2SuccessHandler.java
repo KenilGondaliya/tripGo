@@ -28,14 +28,35 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-
         String registrationId = token.getAuthorizedClientRegistrationId();
 
         ResponseEntity<LoginResponseDto> loginResponse = authService.handleOAuth2Login(oAuth2User,
                 registrationId);
+        LoginResponseDto body = loginResponse.getBody();
 
-        response.setStatus(loginResponse.getStatusCode().value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(mapper.writeValueAsString(loginResponse.getBody()));
+        // Return HTML page with JS to save JWT and redirect
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head><title>Login Success</title></head>
+            <body>
+              <script>
+                localStorage.setItem('jwt', '%s');
+                localStorage.setItem('userId', '%s');
+                localStorage.setItem('username', '%s');
+                window.location.href = '/api/v1/';
+              </script>
+            </body>
+            </html>
+            """.formatted(body.getJwt(), body.getUserId(), body.getUsername());
+
+        response.getWriter().write(html);
+
+//        response.setStatus(loginResponse.getStatusCode().value());
+//        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//        response.getWriter().write(mapper.writeValueAsString(loginResponse.getBody()));
     }
 }
