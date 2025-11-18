@@ -14,6 +14,28 @@
         <span id="errorMessage"></span>
     </div>
 
+    <div id="alreadyLoggedIn" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h2 class="text-xl font-bold text-red-600 mb-2">Already Logged In</h2>
+            <p>You are already signed in. Redirecting to home...</p>
+        </div>
+    </div>
+
+    <script>
+        // Check JWT on page load
+        window.addEventListener('DOMContentLoaded', () => {
+          const jwt = localStorage.getItem('jwt');
+          if (jwt) {
+            // Show message
+            document.getElementById('alreadyLoggedIn').classList.remove('hidden');
+            // Redirect after 2 sec
+            setTimeout(() => {
+              window.location.href = '/api/v1/';
+            }, 2000);
+          }
+        });
+    </script>
+
     <!-- Login Form -->
     <form id="loginForm" class="space-y-4">
         <div>

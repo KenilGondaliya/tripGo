@@ -27,6 +27,7 @@ public class Customer {
     @OneToOne
     @JoinColumn(nullable = false, unique = true)
     @JsonBackReference
+    @MapsId
     private User user;
 
     // Optional fields

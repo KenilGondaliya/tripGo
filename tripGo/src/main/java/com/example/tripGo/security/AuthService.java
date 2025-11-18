@@ -56,7 +56,7 @@ public class AuthService {
                 .username(dto.getUsername())
                 .providerId(providerId)
                 .providerType(provider)
-                .roles(dto.getRoles())
+                .roles(Set.of(RoleType.CUSTOMER))
                 .build();
 
         if (provider == AuthProviderType.EMAIL) {

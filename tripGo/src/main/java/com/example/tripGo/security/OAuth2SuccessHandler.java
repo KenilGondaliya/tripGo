@@ -34,6 +34,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 registrationId);
         LoginResponseDto body = loginResponse.getBody();
 
+        response.setContentType("text/html;charset=UTF-8");
+        String redirectUrl = "/api/v1/";
+
         // Return HTML page with JS to save JWT and redirect
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
@@ -41,7 +44,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String html = """
             <!DOCTYPE html>
             <html>
-            <head><title>Login Success</title></head>
+            <head>
+                <title>Login Success</title>
+                <meta http-equiv="refresh" content="0;url=%s">
+            </head>
             <body>
               <script>
                 localStorage.setItem('jwt', '%s');
@@ -51,7 +57,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
               </script>
             </body>
             </html>
-            """.formatted(body.getJwt(), body.getUserId(), body.getUsername());
+            """.formatted(
+                redirectUrl,
+                body.getJwt(),
+                body.getUserId(),
+                body.getUsername() != null ? body.getUsername() : oAuth2User.getAttribute("email"),
+                redirectUrl
+            );
 
         response.getWriter().write(html);
 
