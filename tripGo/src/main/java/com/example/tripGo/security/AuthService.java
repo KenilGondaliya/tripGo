@@ -1,13 +1,12 @@
 package com.example.tripGo.security;
 
-import com.example.tripGo.dto.LoginRequestDto;
-import com.example.tripGo.dto.LoginResponseDto;
-import com.example.tripGo.dto.SignUpRequestDto;
-import com.example.tripGo.dto.SignupResponseDto;
+import com.example.tripGo.dto.*;
 import com.example.tripGo.entity.Customer;
 import com.example.tripGo.entity.User;
 import com.example.tripGo.entity.type.AuthProviderType;
 import com.example.tripGo.entity.type.RoleType;
+import com.example.tripGo.error.GlobalExceptionHandler;
+import com.example.tripGo.error.UnauthorizedException;
 import com.example.tripGo.repository.CustomerRepository;
 import com.example.tripGo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +15,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,36 @@ public class AuthService {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UserInfoDto getCurrentUser(String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Invalid token");
+        }
+
+        String jwt = token.substring(7);
+        String username = authUtil.getUsernameFromToken(jwt);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Set<String> roles = user.getRoles().stream()
+                .map(r -> "ROLE_" + r.name()) // Convert "ADMIN" → "ROLE_ADMIN"
+                .collect(Collectors.toSet());
+
+        return UserInfoDto.builder()
+                .username(user.getUsername())
+                .roles(roles)
+                .build();
+    }
+
+    public boolean isAdmin(String token) {
+        try {
+            UserInfoDto user = getCurrentUser(token);
+            return user.getRoles().contains("ROLE_ADMIN");
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
 

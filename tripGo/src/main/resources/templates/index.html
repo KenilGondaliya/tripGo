@@ -84,6 +84,27 @@
       setTimeout(() => drawer.classList.add('hidden'), 300);
     }
 
+    let isAdmin = false;
+
+async function checkAdminStatus() {
+  const jwt = localStorage.getItem('jwt');
+  if (!jwt) return;
+
+  try {
+    const res = await fetch('/api/v1/auth/is-admin', {
+      headers: { 'Authorization': `Bearer ${jwt}` }
+    });
+    if (res.ok) {
+      isAdmin = await res.json();
+      console.log("User is admin:", isAdmin);
+    }
+  } catch (err) {
+    console.error("Admin check failed:", err);
+  }
+}
+
+console.log(isAdmin);
+
     // ---------- CONTENT ----------
     function renderDrawer() {
       const jwt      = localStorage.getItem('jwt');
@@ -97,10 +118,19 @@
               ${username.charAt(0).toUpperCase()}
             </div>
             <p class="font-medium text-lg">Hi, ${username}</p>
+
+            <!-- ADD THIS BUTTON -->
+            ${isAdmin ? `
+          <a href="/admin.html" class="block mt-8 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-8 rounded-xl shadow-xl transform hover:scale-105 transition">
+            Admin Panel
+          </a>
+        ` : ''}
+
             <button id="logoutBtn" class="mt-4 w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
               Logout
             </button>
           </div>`;
+
         // re-attach logout after innerHTML
         document.getElementById('logoutBtn').onclick = logout;
       } else {
@@ -138,7 +168,6 @@
     }
 
 
-
     // ---------- LOGOUT ----------
     function logout() {
       localStorage.clear();
@@ -152,9 +181,12 @@
     overlay.onclick   = closeDrawer;
 
     // ---------- INITIALISE ----------
-    document.addEventListener('DOMContentLoaded', () => {
-      renderDrawer();
-    });
+    document.addEventListener('DOMContentLoaded', async () => {
+  if (localStorage.getItem('jwt')) {
+    await checkAdminStatus();
+  }
+  renderDrawer();
+});
 
     // ---------- AUTO-ADD JWT TO FETCH ----------
     const origFetch = window.fetch;

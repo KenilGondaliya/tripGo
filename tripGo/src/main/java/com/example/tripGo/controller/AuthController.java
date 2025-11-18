@@ -1,9 +1,6 @@
 package com.example.tripGo.controller;
 
-import com.example.tripGo.dto.LoginRequestDto;
-import com.example.tripGo.dto.LoginResponseDto;
-import com.example.tripGo.dto.SignUpRequestDto;
-import com.example.tripGo.dto.SignupResponseDto;
+import com.example.tripGo.dto.*;
 import com.example.tripGo.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +21,16 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<SignupResponseDto> signup(@RequestBody SignUpRequestDto dto) {
         return ResponseEntity.ok(authService.signup(dto));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserInfoDto> me(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(authService.getCurrentUser(authHeader));
+    }
+
+    @GetMapping("/is-admin")
+    public ResponseEntity<Boolean> isAdmin(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(authService.isAdmin(authHeader));
     }
 
     @GetMapping("/oauth2/code/google")
