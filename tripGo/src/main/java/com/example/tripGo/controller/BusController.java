@@ -47,6 +47,11 @@ public class BusController {
         return ResponseEntity.ok(busService.getBus(id));
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<BusResponseDto>> getAllBuses() {
+        return ResponseEntity.ok(busService.getAllBuses());
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<BusResponseDto> update(@PathVariable Long id, @Valid @RequestBody BusRequestDto dto) {
         return ResponseEntity.ok(busService.updateBus(id, dto));
@@ -60,7 +65,7 @@ public class BusController {
 
     // Seat APIs
     @PostMapping("/{id}/seats")
-    public List<SeatResponseDto> bulkCreateSeats(
+    public List<SeatResponseDto> bulkCreate(
             @PathVariable Long id,
             @Valid @RequestBody List<SeatRequestDto> dtos) {
         return seatService.bulkCreate(id, dtos);  // Direct call

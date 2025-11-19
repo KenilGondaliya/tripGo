@@ -1,5 +1,6 @@
 package com.example.tripGo.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 
 import static com.example.tripGo.entity.type.PermissionType.BOOKING_WRITE;
 import static com.example.tripGo.entity.type.RoleType.ADMIN;
+import static com.example.tripGo.entity.type.RoleType.CUSTOMER;
 
 @Configuration
 @RequiredArgsConstructor
@@ -45,10 +47,12 @@ public class WebSecurityConfig {
                         .requestMatchers("/", "/home", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
                         .requestMatchers("/api/v1/login").permitAll()
                         .requestMatchers("/api/v1/public/**").permitAll()
+                        .requestMatchers("/admin1", "/bus").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/booking").hasAuthority(BOOKING_WRITE.getPermission())
-                        .requestMatchers("/admin/**").hasRole(ADMIN.name())
+                        .requestMatchers("/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")

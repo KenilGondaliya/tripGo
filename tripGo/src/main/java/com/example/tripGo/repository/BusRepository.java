@@ -9,9 +9,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BusRepository extends JpaRepository<Bus, Long> {
     boolean existsByBusNumber(String busNumber);
+    List<Bus> findAll();
 
     Page<Bus> findByBusNumberContainingIgnoreCaseAndOperatorNameContainingIgnoreCaseAndSeatTypeAndAcType(
             String busNumber, String operatorName, BusSeatType seatType, AcType acType, Pageable pageable);

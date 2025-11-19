@@ -80,15 +80,18 @@
     <!--    <p class="mt-4">Have account? <a href="/api/v1/login">Login</a></p>-->
 
     <div class="mt-6">
-        <p class="text-center text-sm text-gray-600">Or signup with</p>
-        <a class="mt-2 flex justify-center items-center w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-black"
-           th:href="@{/oauth2/authorization/google}">
-            Google
+        <p class="text-center text-2sm text-gray-600 p-2">Or login with</p>
+
+        <a th:href="@{/oauth2/authorization/google}"
+           class="flex justify-center items-center w-full border py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <img src="https://www.google.com/favicon.ico" class="w-5 h-5 mr-2" alt="Google">
+            Continue with Google
         </a>
 
-        <a class="mt-2 flex justify-center items-center w-full bg-black text-white py-2 px-4 rounded-md hover:bg-red-700"
+        <a class="flex justify-center items-center w-full border py-2 rounded-lg hover:bg-gray-50 mt-2 cursor-pointer"
            th:href="@{/oauth2/authorization/github}">
-            Github
+            <img src="https://github.githubassets.com/favicons/favicon.png" class="w-5 h-5 mr-2" alt="GitHub">
+            Continue with GitHub
         </a>
     </div>
 </div>

@@ -57,6 +57,13 @@ public class BusService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bus not found"));
     }
 
+    public List<BusResponseDto> getAllBuses() {
+        return busRepository.findAll().stream()
+                .map(bus -> mapper.map(bus, BusResponseDto.class))
+                .toList();
+    }
+
+
     public BusResponseDto updateBus(Long id, BusRequestDto dto) {
         Bus bus = busRepository.findById(id).orElseThrow();
         if (!bus.getBusNumber().equals(dto.getBusNumber()) && busRepository.existsByBusNumber(dto.getBusNumber())) {

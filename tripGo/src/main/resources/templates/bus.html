@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - TripGo</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+        * {
+          font-family: "Inter", sans-serif;
+        }
+
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+          transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-enter {
+          animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-card {
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        .table-row {
+          transition: all 0.2s ease;
+        }
+
+        .table-row:hover {
+          background-color: #f8f9ff;
+          transform: scale(1.01);
+        }
+
+        .badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .input-modern {
+          border: 2px solid #e5e7eb;
+          transition: all 0.3s ease;
+        }
+
+        .input-modern:focus {
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<!-- Sidebar -->
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 gradient-bg text-white hidden md:block">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div
+                        class="w-10 h-10 bg-white rounded-lg flex items-center justify-center"
+                >
+                    <span class="text-2xl">🚌</span>
+                </div>
+                <h1 class="text-2xl font-bold">TripGo</h1>
+            </div>
+
+            <nav class="space-y-2">
+                <a
+                        href="dashboard.html"
+                        class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 backdrop-blur-sm"
+                >
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a
+                        href="/api/v1/bus"
+                        class="flex items-center space-x-3 bg-white bg-opacity-20 rounded-lg p-3 transition"
+                >
+                    <span class="text-xl">🚌</span>
+                    <span class="font-medium">Buses</span>
+                </a>
+                <a
+                        href="#"
+                        class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition"
+                >
+                    <span class="text-xl">🗺️</span>
+                    <span class="font-medium">Routes</span>
+                </a>
+                <a
+                        href="#"
+                        class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition"
+                >
+                    <span class="text-xl">🎫</span>
+                    <span class="font-medium">Bookings</span>
+                </a>
+                <a
+                        href="#"
+                        class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition"
+                >
+                    <span class="text-xl">👥</span>
+                    <span class="font-medium">Customers</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+                    <div class="flex items-center space-x-3">
+                        <div
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center"
+                        >
+                            <span class="text-purple-600 font-bold">A</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-sm">Admin User</p>
+                            <p class="text-xs text-purple-200">admin@tripgo.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div class="px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Bus Management</h2>
+                    <p class="text-gray-500 text-sm mt-1">
+                        Manage your fleet of buses
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input
+                                type="search"
+                                placeholder="Search buses..."
+                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                    <button
+                            onclick="openCreateBusModal()"
+                            class="btn-primary text-white px-6 py-2.5 rounded-lg font-medium shadow-lg flex items-center space-x-2"
+                    >
+                        <span class="text-xl">+</span>
+                        <span>Add Bus</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div
+                        class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Buses</p>
+                            <p
+                                    class="text-3xl font-bold text-gray-800 mt-2"
+                                    id="totalBuses"
+                            >
+                                0
+                            </p>
+                        </div>
+                        <div
+                                class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center"
+                        >
+                            <span class="text-3xl">🚌</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-green-600 font-semibold">↑ 12%</span>
+                        <span class="text-gray-500 ml-2">from last month</span>
+                    </div>
+                </div>
+
+                <div
+                        class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Seats</p>
+                            <p
+                                    class="text-3xl font-bold text-gray-800 mt-2"
+                                    id="totalSeatsCount"
+                            >
+                                0
+                            </p>
+                        </div>
+                        <div
+                                class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center"
+                        >
+                            <span class="text-3xl">💺</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-green-600 font-semibold">↑ 8%</span>
+                        <span class="text-gray-500 ml-2">capacity increase</span>
+                    </div>
+                </div>
+
+                <div
+                        class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">AC Buses</p>
+                            <p
+                                    class="text-3xl font-bold text-gray-800 mt-2"
+                                    id="acBusesCount"
+                            >
+                                0
+                            </p>
+                        </div>
+                        <div
+                                class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center"
+                        >
+                            <span class="text-3xl">❄️</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-blue-600 font-semibold">65%</span>
+                        <span class="text-gray-500 ml-2">of total fleet</span>
+                    </div>
+                </div>
+
+                <div
+                        class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Operators</p>
+                            <p
+                                    class="text-3xl font-bold text-gray-800 mt-2"
+                                    id="operatorsCount"
+                            >
+                                0
+                            </p>
+                        </div>
+                        <div
+                                class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center"
+                        >
+                            <span class="text-3xl">👔</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span class="text-purple-600 font-semibold">5</span>
+                        <span class="text-gray-500 ml-2">active partners</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buses Table -->
+            <div
+                    class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+            >
+                <div
+                        class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+                >
+                    <h3 class="text-lg font-bold text-gray-800">All Buses</h3>
+                    <div class="flex space-x-2">
+                        <button
+                                class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                        >
+                            Filter
+                        </button>
+                        <button
+                                class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                        >
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th
+                                    class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Bus Number
+                            </th>
+                            <th
+                                    class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Operator
+                            </th>
+                            <th
+                                    class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Type
+                            </th>
+                            <th
+                                    class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Seats
+                            </th>
+                            <th
+                                    class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Status
+                            </th>
+                            <th
+                                    class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider"
+                            >
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="busesBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Bus Modal -->
+<div
+        id="createBusModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4"
+>
+    <div
+            class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl"
+    >
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Create New Bus</h3>
+            <button
+                    onclick="closeModal('createBusModal')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+                ×
+            </button>
+        </div>
+        <form id="createBusForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Bus Number</label
+                >
+                <input
+                        type="text"
+                        placeholder="e.g. MH-04-AB-1234"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="busNumber"
+                        required
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Operator Name</label
+                >
+                <input
+                        type="text"
+                        placeholder="Enter operator name"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="operatorName"
+                        required
+                />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Bus Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="busType"
+                            required
+                    >
+                        <option value="">Select Type</option>
+                        <option value="Volvo">Volvo</option>
+                        <option value="Sleeper">Sleeper</option>
+                        <option value="Semi-Sleeper">Semi-Sleeper</option>
+                        <option value="AC">AC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Seat Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="seatType"
+                            required
+                    >
+                        <option value="SEATER">Seater</option>
+                        <option value="SLEEPER">Sleeper</option>
+                        <option value="SEMI_SLEEPER">Semi-Sleeper</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >AC Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="acType"
+                            required
+                    >
+                        <option value="AC">AC</option>
+                        <option value="NON_AC">Non-AC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Total Seats</label
+                    >
+                    <input
+                            type="number"
+                            placeholder="40"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="totalSeats"
+                            min="1"
+                            required
+                    />
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button
+                        type="submit"
+                        class="flex-1 btn-primary text-white px-6 py-3 rounded-lg font-semibold"
+                >
+                    Create Bus
+                </button>
+                <button
+                        type="button"
+                        onclick="closeModal('createBusModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+                >
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Bus Modal -->
+<div
+        id="editBusModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4"
+>
+    <div
+            class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl"
+    >
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Edit Bus</h3>
+            <button
+                    onclick="closeModal('editBusModal')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+                ×
+            </button>
+        </div>
+        <form id="editBusForm" class="space-y-4">
+            <input type="hidden" id="editBusId" />
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Bus Number</label
+                >
+                <input
+                        type="text"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="editBusNumber"
+                        required
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2"
+                >Operator Name</label
+                >
+                <input
+                        type="text"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="editOperatorName"
+                        required
+                />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Bus Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="editBusType"
+                            required
+                    >
+                        <option value="Volvo">Volvo</option>
+                        <option value="Sleeper">Sleeper</option>
+                        <option value="Semi-Sleeper">Semi-Sleeper</option>
+                        <option value="AC">AC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Seat Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="editSeatType"
+                            required
+                    >
+                        <option value="SEATER">Seater</option>
+                        <option value="SLEEPER">Sleeper</option>
+                        <option value="SEMI_SLEEPER">Semi-Sleeper</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >AC Type</label
+                    >
+                    <select
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="editAcType"
+                            required
+                    >
+                        <option value="AC">AC</option>
+                        <option value="NON_AC">Non-AC</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2"
+                    >Total Seats</label
+                    >
+                    <input
+                            type="number"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="editTotalSeats"
+                            min="1"
+                            required
+                    />
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button
+                        type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                >
+                    Update Bus
+                </button>
+                <button
+                        type="button"
+                        onclick="closeModal('editBusModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+                >
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Seats Modal -->
+<div
+        id="seatsModal"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4"
+>
+    <div
+            class="bg-white rounded-2xl p-8 w-full max-w-4xl max-h-screen overflow-y-auto modal-enter shadow-2xl"
+    >
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800">Manage Seats</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    Bus: <span id="modalBusNumber" class="font-semibold"></span>
+                </p>
+            </div>
+            <button
+                    onclick="closeModal('seatsModal')"
+                    class="text-gray-400 hover:text-gray-600 text-3xl"
+            >
+                ×
+            </button>
+        </div>
+        <button
+                onclick="addSeatRow()"
+                class="mb-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+        >
+            + Add Seat
+        </button>
+        <div class="overflow-x-auto">
+            <table
+                    class="min-w-full border border-gray-200 rounded-lg overflow-hidden"
+            >
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">
+                        Seat Number
+                    </th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">
+                        Type
+                    </th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">
+                        Deck
+                    </th>
+                    <th class="p-4 text-center text-sm font-bold text-gray-700">
+                        Action
+                    </th>
+                </tr>
+                </thead>
+                <tbody id="seatsTableBody" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+            <button
+                    onclick="closeModal('seatsModal')"
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+            >
+                Cancel
+            </button>
+            <button
+                    onclick="saveAllSeats()"
+                    class="btn-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg"
+            >
+                Save All Seats
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentBusId = null;
+    let buses = [];
+
+    // Load Buses
+    async function loadBuses() {
+      try {
+        const res = await fetch("/api/v1/admin/buses/all");
+        const page = await res.json();
+        console.log("API response:", page);
+        buses = page.content || page.data || page || [];
+        const tbody = document.getElementById("busesBody");
+        tbody.innerHTML = "";
+
+        if (!Array.isArray(buses)) {
+          buses = []; // fail-safe
+        }
+
+        console.log(buses);
+
+        buses.forEach((bus) => {
+          const tr = document.createElement("tr");
+          tr.className = "table-row";
+          tr.innerHTML = `
+                  <td class="px-6 py-4">
+                      <div class="flex items-center">
+                          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                              <span class="text-lg">🚌</span>
+                          </div>
+                          <span class="font-semibold text-gray-800">${
+                            bus.busNumber
+                          }</span>
+                      </div>
+                  </td>
+                  <td class="px-6 py-4 text-gray-700">${
+                    bus.operatorName || "N/A"
+                  }</td>
+                  <td class="px-6 py-4">
+                      <span class="badge bg-purple-100 text-purple-700">${
+                        bus.busType || "Standard"
+                      }</span>
+                  </td>
+                  <td class="px-6 py-4">
+                      <span class="font-semibold text-gray-800">${
+                        bus.totalSeats
+                      }</span>
+                      <span class="text-gray-500 text-sm ml-1">seats</span>
+                  </td>
+                  <td class="px-6 py-4">
+                      <span class="badge ${
+                        bus.acType === "AC"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-700"
+                      }">${bus.acType || "N/A"}</span>
+                  </td>
+                  <td class="px-6 py-4">
+                      <div class="flex justify-center space-x-2">
+                          <button onclick="openSeatsModal(${bus.busId}, '${
+            bus.busNumber
+          }')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Seats</button>
+                          <button onclick="editBus(${
+                            bus.busId
+                          })" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
+                          <button onclick="deleteBus(${
+                            bus.busId
+                          })" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
+                      </div>
+                  </td>
+              `;
+          tbody.appendChild(tr);
+        });
+
+        updateStats();
+      } catch (error) {
+        console.error("Error loading buses:", error);
+      }
+    }
+
+    // Update Statistics
+    function updateStats() {
+      document.getElementById("totalBuses").textContent = buses.length;
+      const totalSeats = buses.reduce(
+        (sum, bus) => sum + (bus.totalSeats || 0),
+        0
+      );
+      document.getElementById("totalSeatsCount").textContent = totalSeats;
+      const acBuses = buses.filter((bus) => bus.acType === "AC").length;
+      document.getElementById("acBusesCount").textContent = acBuses;
+      const operators = new Set(buses.map((bus) => bus.operatorName)).size;
+      document.getElementById("operatorsCount").textContent = operators;
+    }
+
+    // Modal Functions
+    function openCreateBusModal() {
+      document.getElementById("createBusModal").classList.remove("hidden");
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add("hidden");
+    }
+
+    // Create Bus
+    document.getElementById("createBusForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const data = {
+        busNumber: document.getElementById("busNumber").value,
+        operatorName: document.getElementById("operatorName").value,
+        busType: document.getElementById("busType").value,
+        seatType: document.getElementById("seatType").value,
+        acType: document.getElementById("acType").value,
+        totalSeats: parseInt(document.getElementById("totalSeats").value),
+      };
+
+      try {
+        const res = await fetch("/api/v1/admin/buses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        closeModal("createBusModal");
+        document.getElementById("createBusForm").reset();
+        loadBuses();
+        if (!res.ok) throw new Error("Failed to create bus");
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: "Bus created successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } catch (error) {
+        Swal.fire("Error", "Failed to create bus", "error");
+      }
+    };
+
+    // Edit Bus
+    async function editBus(busId) {
+      const bus = buses.find((b) => b.busId === busId);
+      if (!bus) return;
+
+      document.getElementById("editBusId").value = bus.busId;
+      document.getElementById("editBusNumber").value = bus.busNumber;
+      document.getElementById("editOperatorName").value = bus.operatorName;
+      document.getElementById("editBusType").value = bus.busType;
+      document.getElementById("editSeatType").value = bus.seatType;
+      document.getElementById("editAcType").value = bus.acType;
+      document.getElementById("editTotalSeats").value = bus.totalSeats;
+
+      document.getElementById("editBusModal").classList.remove("hidden");
+    }
+
+    document.getElementById("editBusForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const busId = document.getElementById("editBusId").value;
+      const data = {
+        busNumber: document.getElementById("editBusNumber").value,
+        operatorName: document.getElementById("editOperatorName").value,
+        busType: document.getElementById("editBusType").value,
+        seatType: document.getElementById("editSeatType").value,
+        acType: document.getElementById("editAcType").value,
+        totalSeats: parseInt(document.getElementById("editTotalSeats").value),
+      };
+
+      try {
+        const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        closeModal("editBusModal");
+        loadBuses();
+
+        if (!res.ok) throw new Error("Seat Update failed");
+        Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: "Bus updated successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } catch (error) {
+        Swal.fire("Error", "Failed to update bus", "error");
+      }
+    };
+
+    // Delete Bus
+    async function deleteBus(busId) {
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, delete it!",
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+            method: "DELETE",
+          });
+          loadBuses();
+          if (!res.ok) throw new Error("Bus Delete Failed");
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Bus has been deleted.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        } catch (error) {
+          Swal.fire("Error", "Failed to delete bus", "error");
+        }
+      }
+    }
+
+    // Seats Management
+    async function openSeatsModal(busId, busNumber) {
+      currentBusId = busId;
+      document.getElementById("modalBusNumber").textContent = busNumber;
+      document.getElementById("seatsModal").classList.remove("hidden");
+
+      try {
+        const res = await fetch(`/api/v1/admin/buses/${busId}/seats`);
+        const seats = await res.json();
+        if (!Array.isArray(seats)) {
+          seats = seats.data || seats.content || [];
+        }
+        renderSeats(seats);
+      } catch (error) {
+        console.error("Error loading seats:", error);
+        renderSeats([]);
+      }
+    }
+
+    function renderSeats(seats) {
+      const tbody = document.getElementById("seatsTableBody");
+      tbody.innerHTML = "";
+
+      seats.forEach((seat) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50";
+        tr.innerHTML = `
+              <td class="p-4">
+                  <input type="text" value="${
+                    seat.seatNumber
+                  }" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-seat-id="${
+          seat.seatId
+        }" data-field="seatNumber">
+              </td>
+              <td class="p-4">
+                  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-seat-id="${
+                    seat.seatId
+                  }" data-field="seatType">
+                      <option value="WINDOW" ${
+                        seat.seatType === "WINDOW" ? "selected" : ""
+                      }>WINDOW</option>
+                      <option value="AISLE" ${
+                        seat.seatType === "AISLE" ? "selected" : ""
+                      }>AISLE</option>
+                  </select>
+              </td>
+              <td class="p-4">
+                  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-seat-id="${
+                    seat.seatId
+                  }" data-field="deckType">
+                      <option value="LOWER" ${
+                        seat.deckType === "LOWER" ? "selected" : ""
+                      }>Lower</option>
+                      <option value="UPPER" ${
+                        seat.deckType === "UPPER" ? "selected" : ""
+                      }>Upper</option>
+                  </select>
+              </td>
+              <td class="p-4 text-center">
+                  <button onclick="deleteSeat(${
+                    seat.seatId
+                  })" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Delete</button>
+              </td>
+          `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addSeatRow() {
+      const tbody = document.getElementById("seatsTableBody");
+      const tr = document.createElement("tr");
+      tr.className = "hover:bg-gray-50 bg-green-50";
+      tr.innerHTML = `
+          <td class="p-4">
+              <input type="text" placeholder="e.g. A1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatNumber">
+          </td>
+          <td class="p-4">
+              <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatType">
+                  <option value="WINDOW">WINDOW</option>
+                  <option value="AISLE">AISLE</option>
+              </select>
+          </td>
+          <td class="p-4">
+              <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="deckType">
+                  <option value="LOWER">Lower</option>
+                  <option value="UPPER">Upper</option>
+              </select>
+          </td>
+          <td class="p-4 text-center">
+              <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+          </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    async function deleteSeat(seatId) {
+      const result = await Swal.fire({
+        title: "Delete seat?",
+        text: "This action cannot be undone",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Yes, delete it!",
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/admin/seats/${seatId}`, {
+            method: "DELETE",
+          });
+          openSeatsModal(
+            currentBusId,
+            document.getElementById("modalBusNumber").textContent
+          );
+
+           if (!res.ok) throw new Error("Seat Delete failed");
+
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Seat has been deleted.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        } catch (error) {
+          Swal.fire("Error", "Failed to delete seat", "error");
+        }
+      }
+    }
+
+    async function saveAllSeats() {
+      const rows = document.querySelectorAll("#seatsTableBody tr");
+      const updates = [];
+      const creates = [];
+
+      rows.forEach((row) => {
+        const seatNumber = row.querySelector(
+          '[data-field="seatNumber"]'
+        ).value;
+        const seatType = row.querySelector('[data-field="seatType"]').value;
+        const deckType = row.querySelector('[data-field="deckType"]').value;
+        const seatId = row.querySelector("[data-seat-id]")?.dataset.seatId;
+
+        const seatData = { seatNumber, seatType, deckType };
+
+        if (seatId) {
+          updates.push(
+            fetch(`/api/v1/admin/seats/${seatId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(seatData),
+            })
+          );
+        } else {
+          creates.push(
+            fetch(`/api/v1/admin/buses/${currentBusId}/seats`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify([seatData]),
+            })
+          );
+        }
+      });
+
+      try {
+        const results = await Promise.all([...updates, ...creates]);
+
+        results.forEach((res) => {
+          if (!res.ok) throw new Error("Seat save failed");
+        });
+
+        closeModal("seatsModal");
+
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: "All seats saved successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } catch (error) {
+        Swal.fire("Error", "Failed to save seats", "error");
+      }
+    }
+
+    // Initialize
+    loadBuses();
+</script>
+</body>
+</html>

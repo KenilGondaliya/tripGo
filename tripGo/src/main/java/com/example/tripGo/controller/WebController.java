@@ -21,4 +21,14 @@ public class WebController {
     public String signup() {
         return "signup";
     }
+
+    @GetMapping("/admin1")
+    public String admin1() {
+        return "admin1";
+    }
+
+    @GetMapping("/bus")
+    public String bus() {
+        return "bus";
+    }
 }
