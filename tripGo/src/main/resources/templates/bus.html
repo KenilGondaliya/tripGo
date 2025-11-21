@@ -21,13 +21,11 @@
         }
 
         .card-hover {
-          transition: all 0.3s ease;
+          transition: none;
         }
 
         .card-hover:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          box-shadow: none;
         }
 
         .modal-enter {
@@ -47,12 +45,12 @@
 
         .btn-primary {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          transition: all 0.3s ease;
+          transition: none;
         }
 
         .btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+          transform: none;
+          box-shadow: none;
         }
 
         .stat-card {
@@ -60,12 +58,12 @@
         }
 
         .table-row {
-          transition: all 0.2s ease;
+          transition: none;
         }
 
         .table-row:hover {
           background-color: #f8f9ff;
-          transform: scale(1.01);
+          transform: none;
         }
 
         .badge {
@@ -104,7 +102,7 @@
 
             <nav class="space-y-2">
                 <a
-                        href="dashboard.html"
+                        href="/api/v1/admin1"
                         class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 backdrop-blur-sm"
                 >
                     <span class="text-xl">📊</span>
@@ -144,13 +142,11 @@
                 <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
                     <div class="flex items-center space-x-3">
                         <div
-                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center"
+                                class="w-10 h-10 bg-white rounded-full flex items-center justify-center" id="userLetter"
                         >
-                            <span class="text-purple-600 font-bold">A</span>
                         </div>
-                        <div class="flex-1">
-                            <p class="font-semibold text-sm">Admin User</p>
-                            <p class="text-xs text-purple-200">admin@tripgo.com</p>
+                        <div class="flex-1"  id="content">
+
                         </div>
                     </div>
                 </div>
@@ -212,8 +208,8 @@
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm">
-                        <span class="text-green-600 font-semibold">↑ 12%</span>
-                        <span class="text-gray-500 ml-2">from last month</span>
+                        <!-- <span class="text-green-600 font-semibold">↑ 12%</span>
+                        <span class="text-gray-500 ml-2">from last month</span> -->
                     </div>
                 </div>
 
@@ -237,8 +233,8 @@
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm">
-                        <span class="text-green-600 font-semibold">↑ 8%</span>
-                        <span class="text-gray-500 ml-2">capacity increase</span>
+                        <!-- <span class="text-green-600 font-semibold">↑ 8%</span>
+                        <span class="text-gray-500 ml-2">capacity increase</span> -->
                     </div>
                 </div>
 
@@ -262,8 +258,8 @@
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm">
-                        <span class="text-blue-600 font-semibold">65%</span>
-                        <span class="text-gray-500 ml-2">of total fleet</span>
+                        <!-- <span class="text-blue-600 font-semibold">65%</span>
+                        <span class="text-gray-500 ml-2">of total fleet</span> -->
                     </div>
                 </div>
 
@@ -287,8 +283,8 @@
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm">
-                        <span class="text-purple-600 font-semibold">5</span>
-                        <span class="text-gray-500 ml-2">active partners</span>
+                        <!-- <span class="text-purple-600 font-semibold">5</span>
+                        <span class="text-gray-500 ml-2">active partners</span> -->
                     </div>
                 </div>
             </div>
@@ -672,489 +668,506 @@
 </div>
 
 <script>
-    function getAuthHeaders() {
-      return {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("jwt"),
-      };
-    }
+    const jwt = localStorage.getItem("jwt");
+    const username = localStorage.getItem("username") || "User";
 
-    let currentBusId = null;
-    let buses = [];
+  const content = document.getElementById("content");
+  const fisrtLetter = document.getElementById("userLetter");
 
-    // Load Buses
-    async function loadBuses() {
-      try {
-        console.log("TOKEN USED IN FETCH:", localStorage.getItem("token"));
-        const res = await fetch("/api/v1/admin/buses/all", {
-          headers: getAuthHeaders(),
-        });
+  if (jwt) {
+      fisrtLetter.innerHTML = `
+          <span class="text-purple-600 font-bold">${username.charAt(0).toUpperCase()}</span>
+          `
 
-        const page = await res.json();
-        // console.log("API response:", page);
-        buses = page.content || page.data || page || [];
-        const tbody = document.getElementById("busesBody");
-        tbody.innerHTML = "";
+      content.innerHTML = `
+      <p class="font-semibold text-sm" >Admin User</p>
+      <p class="font-medium text-sm">${username}</p>
+      `
+  }
 
-        if (!Array.isArray(buses)) {
-          buses = [];
-        }
-
-        console.log(buses);
-
-        buses.forEach((bus) => {
-          const tr = document.createElement("tr");
-          tr.className = "table-row";
-          tr.innerHTML = `
-            <td class="px-6 py-4">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                        <span class="text-lg">🚌</span>
-                    </div>
-                    <span class="font-semibold text-gray-800">${
-                      bus.busNumber
-                    }</span>
-                </div>
-            </td>
-            <td class="px-6 py-4 text-gray-700">${
-              bus.operatorName || "N/A"
-            }</td>
-            <td class="px-6 py-4">
-                <span class="badge bg-purple-100 text-purple-700">${
-                  bus.busType || "Standard"
-                }</span>
-            </td>
-            <td class="px-6 py-4">
-                <span class="font-semibold text-gray-800">${
-                  bus.totalSeats
-                }</span>
-                <span class="text-gray-500 text-sm ml-1">seats</span>
-            </td>
-            <td class="px-6 py-4">
-                <span class="badge ${
-                  bus.acType === "AC"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-700"
-                }">${bus.acType || "N/A"}</span>
-            </td>
-            <td class="px-6 py-4">
-                <div class="flex justify-center space-x-2">
-                    <button onclick="openSeatsModal(${bus.busId}, '${
-            bus.busNumber
-          }')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Seats</button>
-                    <button onclick="editBus(${
-                      bus.busId
-                    })" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
-                    <button onclick="deleteBus(${
-                      bus.busId
-                    })" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
-                </div>
-            </td>
-        `;
-          tbody.appendChild(tr);
-        });
-
-        updateStats();
-      } catch (error) {
-        console.error("Error loading buses:", error);
-      }
-    }
-
-    // Update Statistics
-    function updateStats() {
-      document.getElementById("totalBuses").textContent = buses.length;
-      const totalSeats = buses.reduce(
-        (sum, bus) => sum + (bus.totalSeats || 0),
-        0
-      );
-      document.getElementById("totalSeatsCount").textContent = totalSeats;
-      const acBuses = buses.filter((bus) => bus.acType === "AC").length;
-      document.getElementById("acBusesCount").textContent = acBuses;
-      const operators = new Set(buses.map((bus) => bus.operatorName)).size;
-      document.getElementById("operatorsCount").textContent = operators;
-    }
-
-    // Modal Functions
-    function openCreateBusModal() {
-      document.getElementById("createBusModal").classList.remove("hidden");
-    }
-
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.add("hidden");
-    }
-
-    // Create Bus
-    document.getElementById("createBusForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const data = {
-        busNumber: document.getElementById("busNumber").value,
-        operatorName: document.getElementById("operatorName").value,
-        busType: document.getElementById("busType").value,
-        seatType: document.getElementById("seatType").value,
-        acType: document.getElementById("acType").value,
-        totalSeats: parseInt(document.getElementById("totalSeats").value),
-      };
-
-      try {
-        const res = await fetch("/api/v1/admin/buses", {
-          method: "POST",
-          headers: getAuthHeaders(),
-          body: JSON.stringify(data),
-        });
-        if (!res.ok) throw new Error("Failed to create bus");
-        closeModal("createBusModal");
-        document.getElementById("createBusForm").reset();
-        loadBuses();
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Bus created successfully",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      } catch (error) {
-        Swal.fire("Error", "Failed to create bus", "error");
-      }
+  function getAuthHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + localStorage.getItem("jwt"),
     };
+  }
 
-    // Edit Bus
-    async function editBus(busId) {
-      const bus = buses.find((b) => b.busId === busId);
-      if (!bus) return;
+  let currentBusId = null;
+  let buses = [];
 
-      document.getElementById("editBusId").value = bus.busId;
-      document.getElementById("editBusNumber").value = bus.busNumber;
-      document.getElementById("editOperatorName").value = bus.operatorName;
-      document.getElementById("editBusType").value = bus.busType;
-      document.getElementById("editSeatType").value = bus.seatType;
-      document.getElementById("editAcType").value = bus.acType;
-      document.getElementById("editTotalSeats").value = bus.totalSeats;
-
-      document.getElementById("editBusModal").classList.remove("hidden");
-    }
-
-    document.getElementById("editBusForm").onsubmit = async (e) => {
-      e.preventDefault();
-      const busId = document.getElementById("editBusId").value;
-      const data = {
-        busNumber: document.getElementById("editBusNumber").value,
-        operatorName: document.getElementById("editOperatorName").value,
-        busType: document.getElementById("editBusType").value,
-        seatType: document.getElementById("editSeatType").value,
-        acType: document.getElementById("editAcType").value,
-        totalSeats: parseInt(document.getElementById("editTotalSeats").value),
-      };
-
-      try {
-        const res = await fetch(`/api/v1/admin/buses/${busId}`, {
-          method: "PUT",
-          headers: getAuthHeaders(),
-          body: JSON.stringify(data),
-        });
-        closeModal("editBusModal");
-        loadBuses();
-
-        if (!res.ok) throw new Error("Seat Update failed");
-        Swal.fire({
-          icon: "success",
-          title: "Updated!",
-          text: "Bus updated successfully",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      } catch (error) {
-        Swal.fire("Error", "Failed to update bus", "error");
-      }
-    };
-
-    // Delete Bus
-    async function deleteBus(busId) {
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#dc2626",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, delete it!",
+  // Load Buses
+  async function loadBuses() {
+    try {
+      console.log("TOKEN USED IN FETCH:", localStorage.getItem("token"));
+      const res = await fetch("/api/v1/admin/buses/all", {
+        headers: getAuthHeaders(),
       });
 
-      if (result.isConfirmed) {
-        try {
-          const res = await fetch(`/api/v1/admin/buses/${busId}`, {
-            method: "DELETE",
-            headers: getAuthHeaders(),
-          });
-          loadBuses();
-          if (!res.ok) throw new Error("Bus Delete Failed");
-          Swal.fire({
-            icon: "success",
-            title: "Deleted!",
-            text: "Bus has been deleted.",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        } catch (error) {
-          Swal.fire("Error", "Failed to delete bus", "error");
-        }
+      const page = await res.json();
+      // console.log("API response:", page);
+      buses = page.content || page.data || page || [];
+      const tbody = document.getElementById("busesBody");
+      tbody.innerHTML = "";
+
+      if (!Array.isArray(buses)) {
+        buses = [];
       }
+
+      console.log(buses);
+
+      buses.forEach((bus) => {
+        const tr = document.createElement("tr");
+        tr.className = "table-row";
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+              <div class="flex items-center">
+                  <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                      <span class="text-lg">🚌</span>
+                  </div>
+                  <span class="font-semibold text-gray-800">${
+                    bus.busNumber
+                  }</span>
+              </div>
+          </td>
+          <td class="px-6 py-4 text-gray-700">${
+            bus.operatorName || "N/A"
+          }</td>
+          <td class="px-6 py-4">
+              <span class="badge bg-purple-100 text-purple-700">${
+                bus.busType || "Standard"
+              }</span>
+          </td>
+          <td class="px-6 py-4">
+              <span class="font-semibold text-gray-800">${
+                bus.totalSeats
+              }</span>
+              <span class="text-gray-500 text-sm ml-1">seats</span>
+          </td>
+          <td class="px-6 py-4">
+              <span class="badge ${
+                bus.acType === "AC"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-gray-100 text-gray-700"
+              }">${bus.acType || "N/A"}</span>
+          </td>
+          <td class="px-6 py-4">
+              <div class="flex justify-center space-x-2">
+                  <button onclick="openSeatsModal(${bus.busId}, '${
+          bus.busNumber
+        }')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Seats</button>
+                  <button onclick="editBus(${
+                    bus.busId
+                  })" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
+                  <button onclick="deleteBus(${
+                    bus.busId
+                  })" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
+              </div>
+          </td>
+      `;
+        tbody.appendChild(tr);
+      });
+
+      updateStats();
+    } catch (error) {
+      console.error("Error loading buses:", error);
     }
+  }
 
-    // Seats Management
-    async function openSeatsModal(busId, busNumber) {
-      currentBusId = busId;
-      document.getElementById("modalBusNumber").textContent = busNumber;
-      document.getElementById("seatsModal").classList.remove("hidden");
+  // Update Statistics
+  function updateStats() {
+    document.getElementById("totalBuses").textContent = buses.length;
+    const totalSeats = buses.reduce(
+      (sum, bus) => sum + (bus.totalSeats || 0),
+      0
+    );
+    document.getElementById("totalSeatsCount").textContent = totalSeats;
+    const acBuses = buses.filter((bus) => bus.acType === "AC").length;
+    document.getElementById("acBusesCount").textContent = acBuses;
+    const operators = new Set(buses.map((bus) => bus.operatorName)).size;
+    document.getElementById("operatorsCount").textContent = operators;
+  }
 
+  // Modal Functions
+  function openCreateBusModal() {
+    document.getElementById("createBusModal").classList.remove("hidden");
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.add("hidden");
+  }
+
+  // Create Bus
+  document.getElementById("createBusForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      busNumber: document.getElementById("busNumber").value,
+      operatorName: document.getElementById("operatorName").value,
+      busType: document.getElementById("busType").value,
+      seatType: document.getElementById("seatType").value,
+      acType: document.getElementById("acType").value,
+      totalSeats: parseInt(document.getElementById("totalSeats").value),
+    };
+
+    try {
+      const res = await fetch("/api/v1/admin/buses", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create bus");
+      closeModal("createBusModal");
+      document.getElementById("createBusForm").reset();
+      loadBuses();
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Bus created successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } catch (error) {
+      Swal.fire("Error", "Failed to create bus", "error");
+    }
+  };
+
+  // Edit Bus
+  async function editBus(busId) {
+    const bus = buses.find((b) => b.busId === busId);
+    if (!bus) return;
+
+    document.getElementById("editBusId").value = bus.busId;
+    document.getElementById("editBusNumber").value = bus.busNumber;
+    document.getElementById("editOperatorName").value = bus.operatorName;
+    document.getElementById("editBusType").value = bus.busType;
+    document.getElementById("editSeatType").value = bus.seatType;
+    document.getElementById("editAcType").value = bus.acType;
+    document.getElementById("editTotalSeats").value = bus.totalSeats;
+
+    document.getElementById("editBusModal").classList.remove("hidden");
+  }
+
+  document.getElementById("editBusForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const busId = document.getElementById("editBusId").value;
+    const data = {
+      busNumber: document.getElementById("editBusNumber").value,
+      operatorName: document.getElementById("editOperatorName").value,
+      busType: document.getElementById("editBusType").value,
+      seatType: document.getElementById("editSeatType").value,
+      acType: document.getElementById("editAcType").value,
+      totalSeats: parseInt(document.getElementById("editTotalSeats").value),
+    };
+
+    try {
+      const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      closeModal("editBusModal");
+      loadBuses();
+
+      if (!res.ok) throw new Error("Seat Update failed");
+      Swal.fire({
+        icon: "success",
+        title: "Updated!",
+        text: "Bus updated successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } catch (error) {
+      Swal.fire("Error", "Failed to update bus", "error");
+    }
+  };
+
+  // Delete Bus
+  async function deleteBus(busId) {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
       try {
         const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+          method: "DELETE",
           headers: getAuthHeaders(),
         });
-        const bus = await res.json();
-        let seats = bus.seats || [];
-
-        if (!Array.isArray(seats)) {
-          seats = seats.data || seats.content || [];
-        }
-        console.log("Loaded seats from bus object:", seats);
-        renderSeats(seats);
+        loadBuses();
+        if (!res.ok) throw new Error("Bus Delete Failed");
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Bus has been deleted.",
+          showConfirmButton: false,
+          timer: 1500,
+        });
       } catch (error) {
-        console.error("Error loading seats:", error);
-        renderSeats([]);
+        Swal.fire("Error", "Failed to delete bus", "error");
       }
     }
+  }
 
-    function renderSeats(seats) {
-      // console.log("Rendering seats…", seats);
-      const tbody = document.getElementById("seatsTableBody");
-      const layout = document.getElementById("seatLayout");
+  // Seats Management
+  async function openSeatsModal(busId, busNumber) {
+    currentBusId = busId;
+    document.getElementById("modalBusNumber").textContent = busNumber;
+    document.getElementById("seatsModal").classList.remove("hidden");
 
-      tbody.innerHTML = "";
-      layout.innerHTML = "";
+    try {
+      const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+        headers: getAuthHeaders(),
+      });
+      const bus = await res.json();
+      let seats = bus.seats || [];
 
-      seats.forEach((seat) => {
-        // === TABLE ROWS (unchanged) ===
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-gray-50";
-        tr.innerHTML = `
+      if (!Array.isArray(seats)) {
+        seats = seats.data || seats.content || [];
+      }
+      console.log("Loaded seats from bus object:", seats);
+      renderSeats(seats);
+    } catch (error) {
+      console.error("Error loading seats:", error);
+      renderSeats([]);
+    }
+  }
+
+  function renderSeats(seats) {
+    // console.log("Rendering seats…", seats);
+    const tbody = document.getElementById("seatsTableBody");
+    const layout = document.getElementById("seatLayout");
+
+    tbody.innerHTML = "";
+    layout.innerHTML = "";
+
+    seats.forEach((seat) => {
+      // === TABLE ROWS (unchanged) ===
+      const tr = document.createElement("tr");
+      tr.className = "hover:bg-gray-50";
+      tr.innerHTML = `
 <td class="p-4">
-  <input type="text" value="${seat.seatNumber}"
-  class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-  data-seat-id="${seat.seatId}" data-field="seatNumber">
+<input type="text" value="${seat.seatNumber}"
+class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+data-seat-id="${seat.seatId}" data-field="seatNumber">
 </td>
 <td class="p-4">
-  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-  data-seat-id="${seat.seatId}" data-field="seatType">
-      <option value="WINDOW" ${
-        seat.seatType === "WINDOW" ? "selected" : ""
-      }>WINDOW</option>
-      <option value="AISLE" ${
-        seat.seatType === "AISLE" ? "selected" : ""
-      }>AISLE</option>
-  </select>
+<select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+data-seat-id="${seat.seatId}" data-field="seatType">
+    <option value="WINDOW" ${
+      seat.seatType === "WINDOW" ? "selected" : ""
+    }>WINDOW</option>
+    <option value="AISLE" ${
+      seat.seatType === "AISLE" ? "selected" : ""
+    }>AISLE</option>
+</select>
 </td>
 <td class="p-4">
-  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-  data-seat-id="${seat.seatId}" data-field="deckType">
-      <option value="LOWER" ${
-        seat.deckType === "LOWER" ? "selected" : ""
-      }>Lower</option>
-      <option value="UPPER" ${
-        seat.deckType === "UPPER" ? "selected" : ""
-      }>Upper</option>
-  </select>
+<select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+data-seat-id="${seat.seatId}" data-field="deckType">
+    <option value="LOWER" ${
+      seat.deckType === "LOWER" ? "selected" : ""
+    }>Lower</option>
+    <option value="UPPER" ${
+      seat.deckType === "UPPER" ? "selected" : ""
+    }>Upper</option>
+</select>
 </td>
 <td class="p-4 text-center">
-  <button onclick="deleteSeat(${seat.seatId})"
-  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
+<button onclick="deleteSeat(${seat.seatId})"
+class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
 </td>
 `;
-        tbody.appendChild(tr);
+      tbody.appendChild(tr);
 
-        // === VISUAL LAYOUT (new) ===
-        const seatDiv = document.createElement("div");
-        seatDiv.className = `
+      // === VISUAL LAYOUT (new) ===
+      const seatDiv = document.createElement("div");
+      seatDiv.className = `
 flex items-center justify-center font-semibold cursor-pointer
 <!--${seat.deckType === "UPPER" ? "bg-blue-200" : "bg-green-200"}-->
 `;
 
-        seatDiv.innerHTML = `
+      seatDiv.innerHTML = `
 <div class="flex flex-col items-center">
 <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="26"
-      height="27"
-      viewBox="0 0 26 27"
-      fill="none"
-    >
+    xmlns="http://www.w3.org/2000/svg"
+    width="26"
+    height="27"
+    viewBox="0 0 26 27"
+    fill="none"
+  >
 
-      <rect id="bgRect" width="26" height="27" fill="#FFFFFF"></rect>
-      <g clip-path="url(#clip0_53838_44859)">
-        <path
-          d="M2.84407 9.51883V4.40009C2.84407 2.61259 4.30657 1.15009 6.09407 1.15009H19.9066C21.6941 1.15009 23.1566 2.61259 23.1566 4.40009V9.51883M22.9941 9.51883H22.2628C21.6128 9.51883 21.1253 10.0876 21.1253 10.6563V17.7251C21.1253 19.6751 19.5816 21.2188 17.6316 21.2188H8.45032C6.50032 21.2188 4.95657 19.6751 4.95657 17.7251V10.6563C4.95657 10.0063 4.46907 9.51883 3.81907 9.51883H3.00657C1.70657 9.51883 0.731567 10.5751 0.731567 11.7938V22.5188C0.731567 24.3063 2.19407 25.7688 3.98157 25.7688H22.1003C23.8878 25.7688 25.3503 24.3063 25.3503 22.5188V11.8751C25.3503 10.5751 24.2941 9.51883 22.9941 9.51883Z"
-          stroke="#007B28"
-          stroke-width="1.5"
-          stroke-miterlimit="10"
-        />
-      </g>
-      <defs>
-        <clipPath id="clip0_53838_44859">
-          <rect
-            width="26"
-            height="26"
-            fill="white"
-            transform="translate(0 0.5)"
-          />
-        </clipPath>
-      </defs>
-      <div xmlns="" id="divScriptsUsed" style="display: none" />
-      <script
-        xmlns=""
-        id="globalVarsDetection"
-        src="chrome-extension://cmkdbmfndkfgebldhnkbfhlneefdaaip/js/wrs_env.js"
+    <rect id="bgRect" width="26" height="27" fill="#FFFFFF"></rect>
+    <g clip-path="url(#clip0_53838_44859)">
+      <path
+        d="M2.84407 9.51883V4.40009C2.84407 2.61259 4.30657 1.15009 6.09407 1.15009H19.9066C21.6941 1.15009 23.1566 2.61259 23.1566 4.40009V9.51883M22.9941 9.51883H22.2628C21.6128 9.51883 21.1253 10.0876 21.1253 10.6563V17.7251C21.1253 19.6751 19.5816 21.2188 17.6316 21.2188H8.45032C6.50032 21.2188 4.95657 19.6751 4.95657 17.7251V10.6563C4.95657 10.0063 4.46907 9.51883 3.81907 9.51883H3.00657C1.70657 9.51883 0.731567 10.5751 0.731567 11.7938V22.5188C0.731567 24.3063 2.19407 25.7688 3.98157 25.7688H22.1003C23.8878 25.7688 25.3503 24.3063 25.3503 22.5188V11.8751C25.3503 10.5751 24.2941 9.51883 22.9941 9.51883Z"
+        stroke="#007B28"
+        stroke-width="1.5"
+        stroke-miterlimit="10"
       />
-    </svg>
+    </g>
+    <defs>
+      <clipPath id="clip0_53838_44859">
+        <rect
+          width="26"
+          height="26"
+          fill="white"
+          transform="translate(0 0.5)"
+        />
+      </clipPath>
+    </defs>
+    <div xmlns="" id="divScriptsUsed" style="display: none" />
+    <script
+      xmlns=""
+      id="globalVarsDetection"
+      src="chrome-extension://cmkdbmfndkfgebldhnkbfhlneefdaaip/js/wrs_env.js"
+    />
+  </svg>
 <span class="mt-1">${seat.seatNumber}</span>
 </div>
 `;
 
-        seatDiv.onclick = () => {
-          const bgRect = seatDiv.querySelector("#bgRect");
+      seatDiv.onclick = () => {
+        const bgRect = seatDiv.querySelector("#bgRect");
 
-          if (bgRect.getAttribute("fill") === "#7eca7e") {
-            bgRect.setAttribute("fill", "#FFFFFF");
-          } else {
-            bgRect.setAttribute("fill", "#7eca7e");
-          }
-        };
-
-        layout.appendChild(seatDiv);
-      });
-    }
-
-    function addSeatRow() {
-      const tbody = document.getElementById("seatsTableBody");
-      const tr = document.createElement("tr");
-      tr.className = "hover:bg-gray-50 bg-green-50";
-      tr.innerHTML = `
-    <td class="p-4">
-        <input type="text" placeholder="e.g. A1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatNumber">
-    </td>
-    <td class="p-4">
-        <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatType">
-            <option value="WINDOW">WINDOW</option>
-            <option value="AISLE">AISLE</option>
-        </select>
-    </td>
-    <td class="p-4">
-        <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="deckType">
-            <option value="LOWER">Lower</option>
-            <option value="UPPER">Upper</option>
-        </select>
-    </td>
-    <td class="p-4 text-center">
-        <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
-    </td>
-`;
-      tbody.appendChild(tr);
-    }
-
-    async function deleteSeat(seatId) {
-      const result = await Swal.fire({
-        title: "Delete seat?",
-        text: "This action cannot be undone",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#dc2626",
-        cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, delete it!",
-      });
-
-      if (result.isConfirmed) {
-        try {
-          const res = await fetch(
-            `/api/v1/admin/buses/${currentBusId}/seats/${seatId}`,
-            {
-              method: "DELETE",
-              headers: getAuthHeaders(),
-            }
-          );
-          openSeatsModal(
-            currentBusId,
-            document.getElementById("modalBusNumber").textContent
-          );
-
-          if (!res.ok) throw new Error("Seat Delete failed");
-
-          Swal.fire({
-            icon: "success",
-            title: "Deleted!",
-            text: "Seat has been deleted.",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        } catch (error) {
-          Swal.fire("Error", "Failed to delete seat", "error");
-        }
-      }
-    }
-
-    async function saveAllSeats() {
-      const rows = document.querySelectorAll("#seatsTableBody tr");
-      const updates = [];
-      const creates = [];
-
-      rows.forEach((row) => {
-        const seatNumber = row.querySelector(
-          '[data-field="seatNumber"]'
-        ).value;
-        const seatType = row.querySelector('[data-field="seatType"]').value;
-        const deckType = row.querySelector('[data-field="deckType"]').value;
-        const seatId = row.querySelector("[data-seat-id]")?.dataset.seatId;
-
-        const seatData = { seatNumber, seatType, deckType };
-
-        if (seatId) {
-          updates.push(
-            fetch(`/api/v1/admin/buses/${currentBusId}/seats/${seatId}`, {
-              method: "PUT",
-              headers: getAuthHeaders(),
-              body: JSON.stringify(seatData),
-            })
-          );
+        if (bgRect.getAttribute("fill") === "#7eca7e") {
+          bgRect.setAttribute("fill", "#FFFFFF");
         } else {
-          creates.push(
-            fetch(`/api/v1/admin/buses/${currentBusId}/seats`, {
-              method: "POST",
-              headers: getAuthHeaders(),
-              body: JSON.stringify([seatData]),
-            })
-          );
+          bgRect.setAttribute("fill", "#7eca7e");
         }
-      });
+      };
 
+      layout.appendChild(seatDiv);
+    });
+  }
+
+  function addSeatRow() {
+    const tbody = document.getElementById("seatsTableBody");
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-gray-50 bg-green-50";
+    tr.innerHTML = `
+  <td class="p-4">
+      <input type="text" placeholder="e.g. A1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatNumber">
+  </td>
+  <td class="p-4">
+      <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatType">
+          <option value="WINDOW">WINDOW</option>
+          <option value="AISLE">AISLE</option>
+      </select>
+  </td>
+  <td class="p-4">
+      <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="deckType">
+          <option value="LOWER">Lower</option>
+          <option value="UPPER">Upper</option>
+      </select>
+  </td>
+  <td class="p-4 text-center">
+      <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+  </td>
+`;
+    tbody.appendChild(tr);
+  }
+
+  async function deleteSeat(seatId) {
+    const result = await Swal.fire({
+      title: "Delete seat?",
+      text: "This action cannot be undone",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
       try {
-        const results = await Promise.all([...updates, ...creates]);
+        const res = await fetch(
+          `/api/v1/admin/buses/${currentBusId}/seats/${seatId}`,
+          {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }
+        );
+        openSeatsModal(
+          currentBusId,
+          document.getElementById("modalBusNumber").textContent
+        );
 
-        results.forEach((res) => {
-          if (!res.ok) throw new Error("Seat save failed");
-        });
-
-        closeModal("seatsModal");
+        if (!res.ok) throw new Error("Seat Delete failed");
 
         Swal.fire({
           icon: "success",
-          title: "Success!",
-          text: "All seats saved successfully",
+          title: "Deleted!",
+          text: "Seat has been deleted.",
           showConfirmButton: false,
           timer: 1500,
         });
       } catch (error) {
-        Swal.fire("Error", "Failed to save seats", "error");
+        Swal.fire("Error", "Failed to delete seat", "error");
       }
     }
-    // Initialize
-    loadBuses();
+  }
+
+  async function saveAllSeats() {
+    const rows = document.querySelectorAll("#seatsTableBody tr");
+    const updates = [];
+    const creates = [];
+
+    rows.forEach((row) => {
+      const seatNumber = row.querySelector(
+        '[data-field="seatNumber"]'
+      ).value;
+      const seatType = row.querySelector('[data-field="seatType"]').value;
+      const deckType = row.querySelector('[data-field="deckType"]').value;
+      const seatId = row.querySelector("[data-seat-id]")?.dataset.seatId;
+
+      const seatData = { seatNumber, seatType, deckType };
+
+      if (seatId) {
+        updates.push(
+          fetch(`/api/v1/admin/buses/${currentBusId}/seats/${seatId}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(seatData),
+          })
+        );
+      } else {
+        creates.push(
+          fetch(`/api/v1/admin/buses/${currentBusId}/seats`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify([seatData]),
+          })
+        );
+      }
+    });
+
+    try {
+      const results = await Promise.all([...updates, ...creates]);
+
+      results.forEach((res) => {
+        if (!res.ok) throw new Error("Seat save failed");
+      });
+
+      closeModal("seatsModal");
+
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "All seats saved successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } catch (error) {
+      Swal.fire("Error", "Failed to save seats", "error");
+    }
+  }
+  // Initialize
+  loadBuses();
 </script>
 </body>
 </html>

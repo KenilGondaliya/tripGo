@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - TripGo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        .table-row {
+            transition: all 0.2s ease;
+        }
+
+        .table-row:hover {
+            background-color: #f8f9ff;
+            transform: scale(1.01);
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .input-modern {
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .input-modern:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Sidebar -->
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 gradient-bg text-white hidden md:block">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">🚌</span>
+                </div>
+                <h1 class="text-2xl font-bold">TripGo</h1>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="dashboard.html" class="flex items-center space-x-3 bg-white bg-opacity-20 rounded-lg p-3 backdrop-blur-sm">
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="/api/v1/bus" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🚌</span>
+                    <span class="font-medium">Buses</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🗺️</span>
+                    <span class="font-medium">Routes</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🎫</span>
+                    <span class="font-medium">Bookings</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">👥</span>
+                    <span class="font-medium">Customers</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center" id="userLetter">
+
+                        </div>
+                        <div class="flex-1" id="content">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+
+    <main class="flex flex-col flex-1 overflow-y-auto justify-center items-center bg-white ">
+        <lottie-player
+                src="/static/assets/UnderConstructionAnimation.json"
+                background="transparent"
+                speed="1"
+                style="width: 220px; height: 220px;"
+                loop
+                autoplay>
+        </lottie-player>
+
+
+        <h1 class="text-4xl font-extrabold tracking-wide bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text drop-shadow-md">
+            Coming Soon
+        </h1>
+
+    </main>
+</div>
+
+<script>
+
+    const jwt = localStorage.getItem("jwt");
+      const username = localStorage.getItem("username") || "User";
+
+    const content = document.getElementById("content");
+    const fisrtLetter = document.getElementById("userLetter");
+
+    if (jwt) {
+        fisrtLetter.innerHTML = `
+            <span class="text-purple-600 font-bold">${username.charAt(0).toUpperCase()}</span>
+            `
+
+        content.innerHTML = `
+        <p class="font-semibold text-sm" >Admin User</p>
+        <p class="font-medium text-sm">${username}</p>
+        `
+    }
+</script>
+</body>
+</html>
