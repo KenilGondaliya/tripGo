@@ -672,21 +672,32 @@
 </div>
 
 <script>
+    function getAuthHeaders() {
+      return {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("jwt"),
+      };
+    }
+
     let currentBusId = null;
     let buses = [];
 
     // Load Buses
     async function loadBuses() {
       try {
-        const res = await fetch("/api/v1/admin/buses/all");
+        console.log("TOKEN USED IN FETCH:", localStorage.getItem("token"));
+        const res = await fetch("/api/v1/admin/buses/all", {
+          headers: getAuthHeaders(),
+        });
+
         const page = await res.json();
-        console.log("API response:", page);
+        // console.log("API response:", page);
         buses = page.content || page.data || page || [];
         const tbody = document.getElementById("busesBody");
         tbody.innerHTML = "";
 
         if (!Array.isArray(buses)) {
-          buses = []; // fail-safe
+          buses = [];
         }
 
         console.log(buses);
@@ -695,51 +706,51 @@
           const tr = document.createElement("tr");
           tr.className = "table-row";
           tr.innerHTML = `
-              <td class="px-6 py-4">
-                  <div class="flex items-center">
-                      <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                          <span class="text-lg">🚌</span>
-                      </div>
-                      <span class="font-semibold text-gray-800">${
-                        bus.busNumber
-                      }</span>
-                  </div>
-              </td>
-              <td class="px-6 py-4 text-gray-700">${
-                bus.operatorName || "N/A"
-              }</td>
-              <td class="px-6 py-4">
-                  <span class="badge bg-purple-100 text-purple-700">${
-                    bus.busType || "Standard"
-                  }</span>
-              </td>
-              <td class="px-6 py-4">
-                  <span class="font-semibold text-gray-800">${
-                    bus.totalSeats
-                  }</span>
-                  <span class="text-gray-500 text-sm ml-1">seats</span>
-              </td>
-              <td class="px-6 py-4">
-                  <span class="badge ${
-                    bus.acType === "AC"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-700"
-                  }">${bus.acType || "N/A"}</span>
-              </td>
-              <td class="px-6 py-4">
-                  <div class="flex justify-center space-x-2">
-                      <button onclick="openSeatsModal(${bus.busId}, '${
+            <td class="px-6 py-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-lg">🚌</span>
+                    </div>
+                    <span class="font-semibold text-gray-800">${
+                      bus.busNumber
+                    }</span>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-gray-700">${
+              bus.operatorName || "N/A"
+            }</td>
+            <td class="px-6 py-4">
+                <span class="badge bg-purple-100 text-purple-700">${
+                  bus.busType || "Standard"
+                }</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="font-semibold text-gray-800">${
+                  bus.totalSeats
+                }</span>
+                <span class="text-gray-500 text-sm ml-1">seats</span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="badge ${
+                  bus.acType === "AC"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-700"
+                }">${bus.acType || "N/A"}</span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex justify-center space-x-2">
+                    <button onclick="openSeatsModal(${bus.busId}, '${
             bus.busNumber
           }')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Seats</button>
-                      <button onclick="editBus(${
-                        bus.busId
-                      })" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
-                      <button onclick="deleteBus(${
-                        bus.busId
-                      })" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
-                  </div>
-              </td>
-          `;
+                    <button onclick="editBus(${
+                      bus.busId
+                    })" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
+                    <button onclick="deleteBus(${
+                      bus.busId
+                    })" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
+                </div>
+            </td>
+        `;
           tbody.appendChild(tr);
         });
 
@@ -787,13 +798,13 @@
       try {
         const res = await fetch("/api/v1/admin/buses", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(data),
         });
+        if (!res.ok) throw new Error("Failed to create bus");
         closeModal("createBusModal");
         document.getElementById("createBusForm").reset();
         loadBuses();
-        if (!res.ok) throw new Error("Failed to create bus");
         Swal.fire({
           icon: "success",
           title: "Success!",
@@ -837,7 +848,7 @@
       try {
         const res = await fetch(`/api/v1/admin/buses/${busId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(data),
         });
         closeModal("editBusModal");
@@ -872,6 +883,7 @@
         try {
           const res = await fetch(`/api/v1/admin/buses/${busId}`, {
             method: "DELETE",
+            headers: getAuthHeaders(),
           });
           loadBuses();
           if (!res.ok) throw new Error("Bus Delete Failed");
@@ -895,7 +907,9 @@
       document.getElementById("seatsModal").classList.remove("hidden");
 
       try {
-        const res = await fetch(`/api/v1/admin/buses/${busId}`);
+        const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+          headers: getAuthHeaders(),
+        });
         const bus = await res.json();
         let seats = bus.seats || [];
 
@@ -924,35 +938,35 @@
         tr.className = "hover:bg-gray-50";
         tr.innerHTML = `
 <td class="p-4">
-    <input type="text" value="${seat.seatNumber}"
-    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-    data-seat-id="${seat.seatId}" data-field="seatNumber">
+  <input type="text" value="${seat.seatNumber}"
+  class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+  data-seat-id="${seat.seatId}" data-field="seatNumber">
 </td>
 <td class="p-4">
-    <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-    data-seat-id="${seat.seatId}" data-field="seatType">
-        <option value="WINDOW" ${
-          seat.seatType === "WINDOW" ? "selected" : ""
-        }>WINDOW</option>
-        <option value="AISLE" ${
-          seat.seatType === "AISLE" ? "selected" : ""
-        }>AISLE</option>
-    </select>
+  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+  data-seat-id="${seat.seatId}" data-field="seatType">
+      <option value="WINDOW" ${
+        seat.seatType === "WINDOW" ? "selected" : ""
+      }>WINDOW</option>
+      <option value="AISLE" ${
+        seat.seatType === "AISLE" ? "selected" : ""
+      }>AISLE</option>
+  </select>
 </td>
 <td class="p-4">
-    <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-    data-seat-id="${seat.seatId}" data-field="deckType">
-        <option value="LOWER" ${
-          seat.deckType === "LOWER" ? "selected" : ""
-        }>Lower</option>
-        <option value="UPPER" ${
-          seat.deckType === "UPPER" ? "selected" : ""
-        }>Upper</option>
-    </select>
+  <select class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+  data-seat-id="${seat.seatId}" data-field="deckType">
+      <option value="LOWER" ${
+        seat.deckType === "LOWER" ? "selected" : ""
+      }>Lower</option>
+      <option value="UPPER" ${
+        seat.deckType === "UPPER" ? "selected" : ""
+      }>Upper</option>
+  </select>
 </td>
 <td class="p-4 text-center">
-    <button onclick="deleteSeat(${seat.seatId})"
-    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
+  <button onclick="deleteSeat(${seat.seatId})"
+  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
 </td>
 `;
         tbody.appendChild(tr);
@@ -966,40 +980,40 @@ flex items-center justify-center font-semibold cursor-pointer
 
         seatDiv.innerHTML = `
 <div class="flex flex-col items-center">
- <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="26"
-        height="27"
-        viewBox="0 0 26 27"
-        fill="none"
-      >
+<svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="26"
+      height="27"
+      viewBox="0 0 26 27"
+      fill="none"
+    >
 
-        <rect id="bgRect" width="26" height="27" fill="#FFFFFF"></rect>
-        <g clip-path="url(#clip0_53838_44859)">
-          <path
-            d="M2.84407 9.51883V4.40009C2.84407 2.61259 4.30657 1.15009 6.09407 1.15009H19.9066C21.6941 1.15009 23.1566 2.61259 23.1566 4.40009V9.51883M22.9941 9.51883H22.2628C21.6128 9.51883 21.1253 10.0876 21.1253 10.6563V17.7251C21.1253 19.6751 19.5816 21.2188 17.6316 21.2188H8.45032C6.50032 21.2188 4.95657 19.6751 4.95657 17.7251V10.6563C4.95657 10.0063 4.46907 9.51883 3.81907 9.51883H3.00657C1.70657 9.51883 0.731567 10.5751 0.731567 11.7938V22.5188C0.731567 24.3063 2.19407 25.7688 3.98157 25.7688H22.1003C23.8878 25.7688 25.3503 24.3063 25.3503 22.5188V11.8751C25.3503 10.5751 24.2941 9.51883 22.9941 9.51883Z"
-            stroke="#007B28"
-            stroke-width="1.5"
-            stroke-miterlimit="10"
-          />
-        </g>
-        <defs>
-          <clipPath id="clip0_53838_44859">
-            <rect
-              width="26"
-              height="26"
-              fill="white"
-              transform="translate(0 0.5)"
-            />
-          </clipPath>
-        </defs>
-        <div xmlns="" id="divScriptsUsed" style="display: none" />
-        <script
-          xmlns=""
-          id="globalVarsDetection"
-          src="chrome-extension://cmkdbmfndkfgebldhnkbfhlneefdaaip/js/wrs_env.js"
+      <rect id="bgRect" width="26" height="27" fill="#FFFFFF"></rect>
+      <g clip-path="url(#clip0_53838_44859)">
+        <path
+          d="M2.84407 9.51883V4.40009C2.84407 2.61259 4.30657 1.15009 6.09407 1.15009H19.9066C21.6941 1.15009 23.1566 2.61259 23.1566 4.40009V9.51883M22.9941 9.51883H22.2628C21.6128 9.51883 21.1253 10.0876 21.1253 10.6563V17.7251C21.1253 19.6751 19.5816 21.2188 17.6316 21.2188H8.45032C6.50032 21.2188 4.95657 19.6751 4.95657 17.7251V10.6563C4.95657 10.0063 4.46907 9.51883 3.81907 9.51883H3.00657C1.70657 9.51883 0.731567 10.5751 0.731567 11.7938V22.5188C0.731567 24.3063 2.19407 25.7688 3.98157 25.7688H22.1003C23.8878 25.7688 25.3503 24.3063 25.3503 22.5188V11.8751C25.3503 10.5751 24.2941 9.51883 22.9941 9.51883Z"
+          stroke="#007B28"
+          stroke-width="1.5"
+          stroke-miterlimit="10"
         />
-      </svg>
+      </g>
+      <defs>
+        <clipPath id="clip0_53838_44859">
+          <rect
+            width="26"
+            height="26"
+            fill="white"
+            transform="translate(0 0.5)"
+          />
+        </clipPath>
+      </defs>
+      <div xmlns="" id="divScriptsUsed" style="display: none" />
+      <script
+        xmlns=""
+        id="globalVarsDetection"
+        src="chrome-extension://cmkdbmfndkfgebldhnkbfhlneefdaaip/js/wrs_env.js"
+      />
+    </svg>
 <span class="mt-1">${seat.seatNumber}</span>
 </div>
 `;
@@ -1007,10 +1021,10 @@ flex items-center justify-center font-semibold cursor-pointer
         seatDiv.onclick = () => {
           const bgRect = seatDiv.querySelector("#bgRect");
 
-          if (bgRect.getAttribute("fill") === "#E2E8F0") {
-            bgRect.setAttribute("fill", "#FFFFFF"); // Yellow
+          if (bgRect.getAttribute("fill") === "#7eca7e") {
+            bgRect.setAttribute("fill", "#FFFFFF");
           } else {
-            bgRect.setAttribute("fill", "#E2E8F0"); // Default gray
+            bgRect.setAttribute("fill", "#7eca7e");
           }
         };
 
@@ -1023,25 +1037,25 @@ flex items-center justify-center font-semibold cursor-pointer
       const tr = document.createElement("tr");
       tr.className = "hover:bg-gray-50 bg-green-50";
       tr.innerHTML = `
-      <td class="p-4">
-          <input type="text" placeholder="e.g. A1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatNumber">
-      </td>
-      <td class="p-4">
-          <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatType">
-              <option value="WINDOW">WINDOW</option>
-              <option value="AISLE">AISLE</option>
-          </select>
-      </td>
-      <td class="p-4">
-          <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="deckType">
-              <option value="LOWER">Lower</option>
-              <option value="UPPER">Upper</option>
-          </select>
-      </td>
-      <td class="p-4 text-center">
-          <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
-      </td>
-  `;
+    <td class="p-4">
+        <input type="text" placeholder="e.g. A1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatNumber">
+    </td>
+    <td class="p-4">
+        <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="seatType">
+            <option value="WINDOW">WINDOW</option>
+            <option value="AISLE">AISLE</option>
+        </select>
+    </td>
+    <td class="p-4">
+        <select class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="deckType">
+            <option value="LOWER">Lower</option>
+            <option value="UPPER">Upper</option>
+        </select>
+    </td>
+    <td class="p-4 text-center">
+        <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+    </td>
+`;
       tbody.appendChild(tr);
     }
 
@@ -1062,6 +1076,7 @@ flex items-center justify-center font-semibold cursor-pointer
             `/api/v1/admin/buses/${currentBusId}/seats/${seatId}`,
             {
               method: "DELETE",
+              headers: getAuthHeaders(),
             }
           );
           openSeatsModal(
@@ -1103,7 +1118,7 @@ flex items-center justify-center font-semibold cursor-pointer
           updates.push(
             fetch(`/api/v1/admin/buses/${currentBusId}/seats/${seatId}`, {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              headers: getAuthHeaders(),
               body: JSON.stringify(seatData),
             })
           );
@@ -1111,7 +1126,7 @@ flex items-center justify-center font-semibold cursor-pointer
           creates.push(
             fetch(`/api/v1/admin/buses/${currentBusId}/seats`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: getAuthHeaders(),
               body: JSON.stringify([seatData]),
             })
           );

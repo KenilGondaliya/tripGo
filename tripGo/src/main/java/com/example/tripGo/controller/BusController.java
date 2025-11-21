@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class BusController {
     private final BusService busService;
     private final SeatService seatService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<BusResponseDto> create(@Valid @RequestBody BusRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(busService.createBus(dto));
@@ -42,21 +44,25 @@ public class BusController {
         return ResponseEntity.ok(busService.getBuses(busNumber, operatorName, seatType, acType, pageable));
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<BusResponseDto> get(@PathVariable Long id) {
         return ResponseEntity.ok(busService.getBus(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<List<BusResponseDto>> getAllBuses() {
         return ResponseEntity.ok(busService.getAllBuses());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<BusResponseDto> update(@PathVariable Long id, @Valid @RequestBody BusRequestDto dto) {
         return ResponseEntity.ok(busService.updateBus(id, dto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         busService.deleteBus(id);

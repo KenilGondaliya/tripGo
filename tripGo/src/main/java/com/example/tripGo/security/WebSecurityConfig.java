@@ -31,6 +31,7 @@ import static com.example.tripGo.entity.type.RoleType.CUSTOMER;
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtFilter;
+    private final CustomUserDetailsService userDetailsService;
     private final OAuth2SuccessHandler oAuth2Handler;
 //    @Autowired
 //    @Qualifier("handlerExceptionResolver")
@@ -44,15 +45,14 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessionConfig  -> sessionConfig .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
-                        .requestMatchers("/api/v1/login").permitAll()
+                        .requestMatchers("/", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
+//                        .requestMatchers("/api/v1/login").permitAll()
                         .requestMatchers("/api/v1/public/**").permitAll()
                         .requestMatchers("/admin1", "/bus").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/booking").hasAuthority(BOOKING_WRITE.getPermission())
-                        .requestMatchers("/admin/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-
+                .userDetailsService(userDetailsService)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")

@@ -4,7 +4,12 @@ import com.example.tripGo.dto.*;
 import com.example.tripGo.security.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -36,5 +41,17 @@ public class AuthController {
     @GetMapping("/oauth2/code/google")
     public String oauth2Success() {
         return "redirect:/?loggedIn=true";
+    }
+
+    @GetMapping("/debug")
+    public Map<String, Object> debug() {
+        Authentication a = SecurityContextHolder.getContext().getAuthentication();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("principal", a.getPrincipal());
+        map.put("authorities", a.getAuthorities());
+        map.put("authName", a.getName());
+        map.put("isAuthenticated", a.isAuthenticated());
+        return map;
     }
 }

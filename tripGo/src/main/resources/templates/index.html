@@ -200,5 +200,40 @@ console.log(isAdmin);
     };
 </script>
 
+<button id="debug-btn">Check My Roles</button>
+
+<pre id="debug-output" style="background:#111; color:#0f0; padding:10px; margin-top:10px;"></pre>
+
+<script>
+    document.getElementById("debug-btn").addEventListener("click", async () => {
+
+        const token = localStorage.getItem("jwt");   // <-- Your token storage
+
+        if (!token) {
+            document.getElementById("debug-output").textContent =
+                "No JWT token found in localStorage.";
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/v1/auth/debug", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const data = await response.json();
+
+            document.getElementById("debug-output").textContent =
+                JSON.stringify(data, null, 2);
+
+        } catch (err) {
+            document.getElementById("debug-output").textContent =
+                "Request failed: " + err;
+        }
+    });
+</script>
+
 </body>
 </html>

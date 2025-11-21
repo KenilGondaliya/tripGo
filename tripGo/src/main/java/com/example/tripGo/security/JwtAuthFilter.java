@@ -28,6 +28,8 @@
                 throws java.io.IOException, jakarta.servlet.ServletException {
             try {
                 String header = req.getHeader("Authorization");
+                System.out.println("TOKEN BACKEND RECEIVED: " + header);
+
                 if (header == null || !header.startsWith("Bearer ")) {
                     chain.doFilter(req, res);
                     return;

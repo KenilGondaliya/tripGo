@@ -42,6 +42,7 @@ public class AuthUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+
         return claims.getSubject();
     }
 
