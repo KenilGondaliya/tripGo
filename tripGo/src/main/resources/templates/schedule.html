@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" th:href="@{/assets/favicon.png}">
+    <title>Admin Panel - TripGo Schedules</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+        * {
+          font-family: "Inter", sans-serif;
+        }
+
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+          transition: none;
+        }
+
+        .card-hover:hover {
+          box-shadow: none;
+        }
+
+        .modal-enter {
+          animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          transition: none;
+        }
+
+        .btn-primary:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        .stat-card {
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        .table-row {
+          transition: none;
+        }
+
+        .table-row:hover {
+          background-color: #f8f9ff;
+          transform: none;
+        }
+
+        .badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .input-modern {
+          border: 2px solid #e5e7eb;
+          transition: all 0.3s ease;
+        }
+
+        .input-modern:focus {
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<!-- Main Container -->
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 gradient-bg text-white hidden md:block">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">🚌</span>
+                </div>
+                <h1 class="text-2xl font-bold">TripGo</h1>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="/api/v1/admin1"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 backdrop-blur-sm">
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="/api/v1/bus"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🚌</span>
+                    <span class="font-medium">Buses</span>
+                </a>
+                <a href="/api/v1/routes"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🗺️</span>
+                    <span class="font-medium">Routes</span>
+                </a>
+                <a href="/api/v1/schedule"
+                   class="flex items-center space-x-3 bg-white bg-opacity-20 rounded-lg p-3 transition">
+                    <span class="text-xl">📅</span>
+                    <span class="font-medium">Schedules</span>
+                </a>
+                <a href="#"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🎫</span>
+                    <span class="font-medium">Bookings</span>
+                </a>
+                <a href="#"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">👥</span>
+                    <span class="font-medium">Customers</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center" id="userLetter"></div>
+                        <div class="flex-1" id="content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div class="px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Schedule Management</h2>
+                    <p class="text-gray-500 text-sm mt-1">Manage bus schedules and timings</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input
+                                type="search"
+                                placeholder="Search schedules..."
+                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                id="searchInput"
+                        />
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                    <button
+                            onclick="openCreateScheduleModal()"
+                            class="btn-primary text-white px-6 py-2.5 rounded-lg font-medium shadow-lg flex items-center space-x-2"
+                    >
+                        <span class="text-xl">+</span>
+                        <span>Add Schedule</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Schedules</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="totalSchedules">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">📅</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Active Schedules</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="activeSchedules">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Routes</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="totalRoutes">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">🗺️</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Buses</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="totalBuses">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">🚌</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedules Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">All Schedules</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                            Filter
+                        </button>
+                        <button class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Route
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Bus
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Journey Date
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Start Time
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                End Time
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Travel Time
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Points
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="schedulesBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Schedule Modal -->
+<div id="createScheduleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl overflow-y-auto max-h-screen">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Create New Schedule</h3>
+            <button onclick="closeModal('createScheduleModal')" class="text-gray-400 hover:text-gray-600 text-2xl">
+                ×
+            </button>
+        </div>
+        <form id="createScheduleForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Bus</label>
+                <select
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="busId"
+                        required
+                >
+                    <option value="">Select a Bus</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Route</label>
+                <select
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="routeId"
+                        required
+                >
+                    <option value="">Select a Route</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Journey Date</label>
+                <input
+                        type="date"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="journeyDate"
+                        required
+                />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
+                    <input
+                            type="time"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="startTime"
+                            required
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
+                    <input
+                            type="time"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="endTime"
+                            required
+                    />
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Total Travel Time</label>
+                <input
+                        type="text"
+                        placeholder="e.g. 24:30"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="totalTravelTime"
+                        required
+                />
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    Create Schedule
+                </button>
+                <button type="button" onclick="closeModal('createScheduleModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Schedule Modal -->
+<div id="editScheduleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl overflow-y-auto max-h-screen">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Edit Schedule</h3>
+            <button onclick="closeModal('editScheduleModal')" class="text-gray-400 hover:text-gray-600 text-2xl">
+                ×
+            </button>
+        </div>
+        <form id="editScheduleForm" class="space-y-4">
+            <input type="hidden" id="editScheduleId" />
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Bus</label>
+                <select class="w-full p-3 input-modern rounded-lg" id="editBusId" required>
+                    <option value="">Select a Bus</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Route</label>
+                <select class="w-full p-3 input-modern rounded-lg" id="editRouteId" required>
+                    <option value="">Select a Route</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Journey Date</label>
+                <input type="date" class="w-full p-3 input-modern rounded-lg" id="editJourneyDate" required />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
+                    <input type="time" class="w-full p-3 input-modern rounded-lg" id="editStartTime" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
+                    <input type="time" class="w-full p-3 input-modern rounded-lg" id="editEndTime" required />
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Total Travel Time</label>
+                <input type="text" class="w-full p-3 input-modern rounded-lg" id="editTotalTravelTime" required />
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                    Update Schedule
+                </button>
+                <button type="button" onclick="closeModal('editScheduleModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Schedule Points Modal -->
+<div id="schedulePointsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-4xl max-h-screen overflow-y-auto modal-enter shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800">Manage Schedule Points</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    Schedule: <span id="modalScheduleInfo" class="font-semibold"></span>
+                </p>
+            </div>
+            <button onclick="closeModal('schedulePointsModal')" class="text-gray-400 hover:text-gray-600 text-3xl">
+                ×
+            </button>
+        </div>
+        <button
+                onclick="addPointRow()"
+                class="mb-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+        >
+            + Add Point
+        </button>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">Location Name</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">Arrival Time</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">Departure Time</th>
+                    <th class="p-4 text-center text-sm font-bold text-gray-700">Boarding</th>
+                    <th class="p-4 text-center text-sm font-bold text-gray-700">Dropping</th>
+                    <th class="p-4 text-center text-sm font-bold text-gray-700">Action</th>
+                </tr>
+                </thead>
+                <tbody id="pointsTableBody" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+            <button
+                    onclick="closeModal('schedulePointsModal')"
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+            >
+                Cancel
+            </button>
+            <button
+                    onclick="saveAllPoints()"
+                    class="btn-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg"
+            >
+                Save All Points
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const jwt = localStorage.getItem("jwt");
+    const username = localStorage.getItem("username") || "User";
+
+    const content = document.getElementById("content");
+    const firstLetter = document.getElementById("userLetter");
+
+    if (jwt) {
+        firstLetter.innerHTML = `<span class="text-purple-600 font-bold">${username.charAt(0).toUpperCase()}</span>`;
+        content.innerHTML = `
+            <p class="font-semibold text-sm">Admin User</p>
+            <p class="font-medium text-sm">${username}</p>
+        `;
+    }
+
+    function getAuthHeaders() {
+        return {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("jwt"),
+        };
+    }
+
+    let currentScheduleId = null;
+    let schedules = [];
+    let buses = [];
+    let routes = [];
+
+    // Load Buses for dropdown
+    async function loadBuses() {
+        try {
+            const res = await fetch("/api/v1/admin/buses/all", {
+                headers: getAuthHeaders(),
+            });
+            const page = await res.json();
+            buses = page.content || page.data || page || [];
+
+            if (!Array.isArray(buses)) {
+                buses = [];
+            }
+
+            const createSelect = document.getElementById("busId");
+            const editSelect = document.getElementById("editBusId");
+
+            [createSelect, editSelect].forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">Select a Bus</option>';
+                buses.forEach(bus => {
+                    const opt = document.createElement("option");
+                    opt.value = bus.busId;
+                    opt.textContent = `${bus.busNumber} - ${bus.operatorName}`;
+                    select.appendChild(opt);
+                });
+            });
+        } catch (error) {
+            console.error("Error loading buses:", error);
+        }
+    }
+
+    // Load Routes for dropdown
+    async function loadRoutes() {
+        try {
+            const res = await fetch("/api/v1/admin/routes/all-routes", {
+                headers: getAuthHeaders(),
+            });
+            const page = await res.json();
+            routes = page.content || page.data || page || [];
+
+            if (!Array.isArray(routes)) {
+                routes = [];
+            }
+
+            const createSelect = document.getElementById("routeId");
+            const editSelect = document.getElementById("editRouteId");
+
+            [createSelect, editSelect].forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">Select a Route</option>';
+                routes.forEach(route => {
+                    const opt = document.createElement("option");
+                    opt.value = route.routeId;
+                    opt.textContent = `${route.startPoint} → ${route.endPoint}`;
+                    select.appendChild(opt);
+                });
+            });
+        } catch (error) {
+            console.error("Error loading routes:", error);
+        }
+    }
+
+    // Load Schedules
+    async function loadSchedules() {
+        try {
+            const res = await fetch("/api/v1/admin/schedules", {
+                headers: getAuthHeaders(),
+            });
+            const page = await res.json();
+            schedules = page.content || page.data || page || [];
+
+            if (!Array.isArray(schedules)) {
+                schedules = [];
+            }
+
+            const tbody = document.getElementById("schedulesBody");
+            tbody.innerHTML = "";
+
+            schedules.forEach((schedule) => {
+                const tr = document.createElement("tr");
+                tr.className = "table-row";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="text-lg">🗺️</span>
+                            </div>
+                            <span class="font-semibold text-gray-800">${schedule.startPoint} → ${schedule.endPoint}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="badge bg-purple-100 text-purple-700">${schedule.busNumber || "N/A"}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">${schedule.journeyDate || "N/A"}</td>
+                    <td class="px-6 py-4 text-gray-700">${schedule.startTime || "N/A"}</td>
+                    <td class="px-6 py-4 text-gray-700">${schedule.endTime || "N/A"}</td>
+                    <td class="px-6 py-4 text-gray-700">${schedule.totalTravelTime || "N/A"}</td>
+                    <td class="px-6 py-4">
+                        <span class="badge bg-blue-100 text-blue-700">${schedule.points ? schedule.points.length : 0}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="openPointsModal(${schedule.scheduleId}, '${schedule.startPoint} → ${schedule.endPoint}')"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Points</button>
+                            <button onclick="editSchedule(${schedule.scheduleId})"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
+                            <button onclick="deleteSchedule(${schedule.scheduleId})"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats();
+        } catch (error) {
+            console.error("Error loading schedules:", error);
+        }
+    }
+
+    // Update Statistics
+    function updateStats() {
+        document.getElementById("totalSchedules").textContent = schedules.length;
+        const activeCount = schedules.filter(s => new Date(s.journeyDate) >= new Date()).length;
+        document.getElementById("activeSchedules").textContent = activeCount;
+        document.getElementById("totalRoutes").textContent = routes.length;
+        document.getElementById("totalBuses").textContent = buses.length;
+    }
+
+    // Modal Functions
+    function openCreateScheduleModal() {
+        document.getElementById("createScheduleModal").classList.remove("hidden");
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add("hidden");
+    }
+
+    // Create Schedule
+    document.getElementById("createScheduleForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            busId: parseInt(document.getElementById("busId").value),
+            routeId: parseInt(document.getElementById("routeId").value),
+            journeyDate: document.getElementById("journeyDate").value,
+            startTime: document.getElementById("startTime").value + ":00",
+            endTime: document.getElementById("endTime").value + ":00",
+            totalTravelTime: document.getElementById("totalTravelTime").value,
+        };
+
+        try {
+            const res = await fetch("/api/v1/admin/schedules", {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error("Failed to create schedule");
+            closeModal("createScheduleModal");
+            document.getElementById("createScheduleForm").reset();
+            loadSchedules();
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Schedule created successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } catch (error) {
+            Swal.fire("Error", "Failed to create schedule", "error");
+        }
+    };
+
+       // Edit Schedule
+    async function editSchedule(scheduleId) {
+        const schedule = schedules.find(s => s.scheduleId === scheduleId);
+        if (!schedule) return;
+
+        document.getElementById("editScheduleId").value = schedule.scheduleId;
+        document.getElementById("editBusId").value = schedule.busId;
+        document.getElementById("editRouteId").value = schedule.routeId;
+        document.getElementById("editJourneyDate").value = schedule.journeyDate;
+        document.getElementById("editStartTime").value = schedule.startTime.substring(0, 5);
+        document.getElementById("editEndTime").value = schedule.endTime.substring(0, 5);
+        document.getElementById("editTotalTravelTime").value = schedule.totalTravelTime || "";
+
+        document.getElementById("editScheduleModal").classList.remove("hidden");
+    }
+
+    document.getElementById("editScheduleForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const scheduleId = document.getElementById("editScheduleId").value;
+        const data = {
+            busId: parseInt(document.getElementById("editBusId").value),
+            routeId: parseInt(document.getElementById("editRouteId").value),
+            journeyDate: document.getElementById("editJourneyDate").value,
+            startTime: document.getElementById("editStartTime").value + ":00",
+            endTime: document.getElementById("editEndTime").value + ":00",
+            totalTravelTime: document.getElementById("editTotalTravelTime").value,
+        };
+
+        try {
+            const res = await fetch(`/api/v1/admin/schedules/${scheduleId}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error("Failed to update schedule");
+            closeModal("editScheduleModal");
+            loadSchedules();
+            Swal.fire({
+                icon: "success",
+                title: "Updated!",
+                text: "Schedule updated successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } catch (error) {
+            Swal.fire("Error", "Failed to update schedule", "error");
+        }
+    };
+
+    // Delete Schedule
+    async function deleteSchedule(scheduleId) {
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`/api/v1/admin/schedules/${scheduleId}`, {
+                    method: "DELETE",
+                    headers: getAuthHeaders(),
+                });
+                if (!res.ok) throw new Error("Schedule Delete Failed");
+                loadSchedules();
+                Swal.fire({
+                    icon: "success",
+                    title: "Deleted!",
+                    text: "Schedule has been deleted.",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } catch (error) {
+                Swal.fire("Error", "Failed to delete schedule", "error");
+            }
+        }
+    }
+
+    // Schedule Points Management
+    async function openPointsModal(scheduleId, scheduleInfo) {
+        currentScheduleId = scheduleId;
+        document.getElementById("modalScheduleInfo").textContent = scheduleInfo;
+        document.getElementById("schedulePointsModal").classList.remove("hidden");
+
+        try {
+            const res = await fetch(`/api/v1/admin/schedules/${scheduleId}`, {
+                headers: getAuthHeaders(),
+            });
+            const schedule = await res.json();
+            let points = schedule.points || [];
+
+            if (!Array.isArray(points)) {
+                points = points.data || points.content || [];
+            }
+            renderPoints(points);
+        } catch (error) {
+            console.error("Error loading points:", error);
+            renderPoints([]);
+        }
+    }
+
+    function renderPoints(points) {
+        const tbody = document.getElementById("pointsTableBody");
+        tbody.innerHTML = "";
+
+        points.forEach((point) => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-gray-50";
+            tr.innerHTML = `
+                <td class="p-4">
+                    <input type="text" value="${point.locationName || ''}"
+                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                    data-point-id="${point.id || ''}" data-field="locationName">
+                </td>
+                <td class="p-4">
+                    <input type="time" value="${point.arrivalTime || ''}"
+                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                    data-point-id="${point.id || ''}" data-field="arrivalTime">
+                </td>
+                <td class="p-4">
+                    <input type="time" value="${point.departureTime || ''}"
+                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                    data-point-id="${point.id || ''}" data-field="departureTime">
+                </td>
+                <td class="p-4 text-center">
+                    <input type="checkbox" ${point.isBoardingPoint ? 'checked' : ''}
+                    class="w-5 h-5 text-green-600 rounded"
+                    data-point-id="${point.id || ''}" data-field="isBoardingPoint">
+                </td>
+                <td class="p-4 text-center">
+                    <input type="checkbox" ${point.isDroppingPoint ? 'checked' : ''}
+                    class="w-5 h-5 text-red-600 rounded"
+                    data-point-id="${point.id || ''}" data-field="isDroppingPoint">
+                </td>
+                <td class="p-4 text-center">
+                    <button onclick="deletePoint(${point.id})"
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addPointRow() {
+        const tbody = document.getElementById("pointsTableBody");
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50 bg-green-50";
+        tr.innerHTML = `
+            <td class="p-4">
+                <input type="text" placeholder="e.g. Delhi Terminal" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="locationName">
+            </td>
+            <td class="p-4">
+                <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="arrivalTime">
+            </td>
+            <td class="p-4">
+                <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="departureTime">
+            </td>
+            <td class="p-4 text-center">
+                <input type="checkbox" class="w-5 h-5 text-green-600 rounded" data-field="isBoardingPoint">
+            </td>
+            <td class="p-4 text-center">
+                <input type="checkbox" class="w-5 h-5 text-red-600 rounded" data-field="isDroppingPoint">
+            </td>
+            <td class="p-4 text-center">
+                <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    async function deletePoint(pointId) {
+        const result = await Swal.fire({
+            title: "Delete point?",
+            text: "This action cannot be undone",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(
+                    `/api/v1/admin/schedules/${currentScheduleId}/points/${pointId}`,
+                    {
+                        method: "DELETE",
+                        headers: getAuthHeaders(),
+                    }
+                );
+                if (!res.ok) throw new Error("Point Delete failed");
+
+                openPointsModal(
+                    currentScheduleId,
+                    document.getElementById("modalScheduleInfo").textContent
+                );
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Deleted!",
+                    text: "Point has been deleted.",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } catch (error) {
+                Swal.fire("Error", "Failed to delete point", "error");
+            }
+        }
+    }
+
+    async function saveAllPoints() {
+        const rows = document.querySelectorAll("#pointsTableBody tr");
+        const updates = [];
+        const creates = [];
+
+        rows.forEach((row) => {
+            const locationName = row.querySelector('[data-field="locationName"]').value;
+            const arrivalTime = row.querySelector('[data-field="arrivalTime"]').value;
+            const departureTime = row.querySelector('[data-field="departureTime"]').value;
+            const isBoardingPoint = row.querySelector('[data-field="isBoardingPoint"]').checked;
+            const isDroppingPoint = row.querySelector('[data-field="isDroppingPoint"]').checked;
+            const pointId = row.querySelector("[data-point-id]")?.dataset.pointId;
+
+            const pointData = {
+                locationName,
+                arrivalTime: arrivalTime ? arrivalTime + ":00" : null,
+                departureTime: departureTime ? departureTime + ":00" : null,
+                isBoardingPoint,
+                isDroppingPoint
+            };
+
+            if (pointId && pointId !== '') {
+                updates.push(
+                    fetch(`/api/v1/admin/schedules/${currentScheduleId}/points/${pointId}`, {
+                        method: "PUT",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(pointData),
+                    })
+                );
+            } else {
+                creates.push(
+                    fetch(`/api/v1/admin/schedules/${currentScheduleId}/points`, {
+                        method: "POST",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify([pointData]),
+                    })
+                );
+            }
+        });
+
+        try {
+            const results = await Promise.all([...updates, ...creates]);
+
+            results.forEach((res) => {
+                if (!res.ok) throw new Error("Point save failed");
+            });
+
+            closeModal("schedulePointsModal");
+
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "All points saved successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            loadSchedules();
+        } catch (error) {
+            Swal.fire("Error", "Failed to save points", "error");
+        }
+    }
+
+    // Initialize
+    loadBuses();
+    loadRoutes();
+    loadSchedules();
+</script>
+</body>
+</html>

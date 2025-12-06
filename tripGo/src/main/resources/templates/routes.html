@@ -1,0 +1,1287 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" th:href="@{/assets/favicon.png}">
+    <title>Admin Panel - TripGo Routes</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+            rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+        * {
+          font-family: "Inter", sans-serif;
+        }
+
+        .gradient-bg {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-hover {
+          transition: none;
+        }
+
+        .card-hover:hover {
+          box-shadow: none;
+        }
+
+        .modal-enter {
+          animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          transition: none;
+        }
+
+        .btn-primary:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        .stat-card {
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+        }
+
+        .table-row {
+          transition: none;
+        }
+
+        .table-row:hover {
+          background-color: #f8f9ff;
+          transform: none;
+        }
+
+        .badge {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .input-modern {
+          border: 2px solid #e5e7eb;
+          transition: all 0.3s ease;
+        }
+
+        .input-modern:focus {
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          outline: none;
+        }
+
+        .seat-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+          gap: 8px;
+          padding: 16px;
+          background: #f9fafb;
+          border-radius: 12px;
+        }
+
+        .seat-btn {
+          padding: 12px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          background: white;
+          cursor: pointer;
+          font-size: 12px;
+          font-weight: 600;
+          transition: all 0.2s ease;
+          text-align: center;
+        }
+
+        .seat-btn:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        .seat-btn.selected {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border-color: #667eea;
+        }
+
+        .seat-type-filter {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+
+        .filter-btn {
+          padding: 8px 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          background: white;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+
+        .filter-btn.active {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border-color: #667eea;
+        }
+
+        .tabs {
+          display: flex;
+          gap: 8px;
+          border-bottom: 2px solid #e5e7eb;
+          margin-bottom: 20px;
+        }
+
+        .tab {
+          padding: 12px 24px;
+          cursor: pointer;
+          font-weight: 600;
+          border-bottom: 3px solid transparent;
+          transition: all 0.2s ease;
+          color: #6b7280;
+        }
+
+        .tab.active {
+          color: #667eea;
+          border-bottom-color: #667eea;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<!-- Main Container -->
+<div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 gradient-bg text-white hidden md:block">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">🚌</span>
+                </div>
+                <h1 class="text-2xl font-bold">TripGo</h1>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="/api/v1/admin1"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 backdrop-blur-sm">
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="/api/v1/bus"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🚌</span>
+                    <span class="font-medium">Buses</span>
+                </a>
+                <a href="/api/v1/routes"
+                   class="flex items-center space-x-3 bg-white bg-opacity-20 rounded-lg p-3 transition">
+                    <span class="text-xl">🗺️</span>
+                    <span class="font-medium">Routes</span>
+                </a>
+                <a href="/api/v1/schedule"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10  rounded-lg p-3 transition">
+                    <span class="text-xl">📅</span>
+                    <span class="font-medium">Schedules</span>
+                </a>
+                <a href="#"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">🎫</span>
+                    <span class="font-medium">Bookings</span>
+                </a>
+                <a href="#"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                    <span class="text-xl">👥</span>
+                    <span class="font-medium">Customers</span>
+                </a>
+            </nav>
+
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center" id="userLetter"></div>
+                        <div class="flex-1" id="content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div class="px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Route Management</h2>
+                    <p class="text-gray-500 text-sm mt-1">Manage your bus routes</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input
+                                type="search"
+                                placeholder="Search routes..."
+                                class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                id="searchInput"
+                        />
+                        <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                    </div>
+                    <button
+                            onclick="openCreateRouteModal()"
+                            class="btn-primary text-white px-6 py-2.5 rounded-lg font-medium shadow-lg flex items-center space-x-2"
+                    >
+                        <span class="text-xl">+</span>
+                        <span>Add Route</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Routes</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="totalRoutes">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">🗺️</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Distance</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="totalDistanceDisplay">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">📏</span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-gray-500 text-sm">km</span>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Active Routes</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="activeRoutes">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">✅</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card rounded-xl p-6 shadow-sm card-hover border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Unique Start Points</p>
+                            <p class="text-3xl font-bold text-gray-800 mt-2" id="startPoints">0</p>
+                        </div>
+                        <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <span class="text-3xl">📍</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Routes Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">All Routes</h3>
+                    <div class="flex space-x-2">
+                        <button class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                            Filter
+                        </button>
+                        <button class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                From
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                To
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Bus Number
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Distance
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Travel Time
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Points
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="routesBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Create Route Modal -->
+<div id="createRouteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Create New Route</h3>
+            <button onclick="closeModal('createRouteModal')" class="text-gray-400 hover:text-gray-600 text-2xl">
+                ×
+            </button>
+        </div>
+        <form id="createRouteForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Bus</label>
+                <select
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="busId"
+                        required
+                >
+                    <option value="">Select a Bus</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Start Point</label>
+                <input
+                        type="text"
+                        placeholder="e.g. Delhi"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="startPoint"
+                        required
+                />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">End Point</label>
+                <input
+                        type="text"
+                        placeholder="e.g. Mumbai"
+                        class="w-full p-3 input-modern rounded-lg"
+                        id="endPoint"
+                        required
+                />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Total Distance (km)</label>
+                    <input
+                            type="number"
+                            placeholder="1500"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="totalDistance"
+                            min="0"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Travel Time</label>
+                    <input
+                            type="text"
+                            placeholder="e.g. 24:30"
+                            class="w-full p-3 input-modern rounded-lg"
+                            id="totalTravelTime"
+                    />
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    Create Route
+                </button>
+                <button type="button" onclick="closeModal('createRouteModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Route Modal -->
+<div id="editRouteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-lg modal-enter shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Edit Route</h3>
+            <button onclick="closeModal('editRouteModal')" class="text-gray-400 hover:text-gray-600 text-2xl">
+                ×
+            </button>
+        </div>
+        <form id="editRouteForm" class="space-y-4">
+            <input type="hidden" id="editRouteId" />
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Bus</label>
+                <select class="w-full p-3 input-modern rounded-lg" id="editBusId" required>
+                    <option value="">Select a Bus</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Start Point</label>
+                <input type="text" class="w-full p-3 input-modern rounded-lg" id="editStartPoint" required />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">End Point</label>
+                <input type="text" class="w-full p-3 input-modern rounded-lg" id="editEndPoint" required />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Total Distance (km)</label>
+                    <input type="number" class="w-full p-3 input-modern rounded-lg" id="editTotalDistance" min="0" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Travel Time</label>
+                    <input type="text" class="w-full p-3 input-modern rounded-lg" id="editTotalTravelTime" />
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                    Update Route
+                </button>
+                <button type="button" onclick="closeModal('editRouteModal')"
+                        class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Route Points Modal -->
+<div id="routePointsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto modal-enter shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800">Manage Route Points</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    Route: <span id="modalRouteInfo" class="font-semibold"></span>
+                </p>
+            </div>
+            <button onclick="closeModal('routePointsModal')" class="text-gray-400 hover:text-gray-600 text-3xl">
+                ×
+            </button>
+        </div>
+        <button
+                onclick="addPointRow()"
+                class="mb-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+        >
+            + Add Point
+        </button>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">Sequence</th>
+                    <th class="p-4 text-left text-sm font-bold text-gray-700">Location Name</th>
+                    <th class="p-4 text-center text-sm font-bold text-gray-700">Action</th>
+                </tr>
+                </thead>
+                <tbody id="pointsTableBody" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+            <button
+                    onclick="closeModal('routePointsModal')"
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+            >
+                Cancel
+            </button>
+            <button
+                    onclick="saveAllPoints()"
+                    class="btn-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg"
+            >
+                Save All Points
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Seat Pricing Modal -->
+<div id="seatPricingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl p-8 w-full max-w-4xl my-8 modal-enter shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-800">Set Seat Prices</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    Route: <span id="seatPricingRouteInfo" class="font-semibold"></span> | Bus: <span id="seatPricingBusInfo" class="font-semibold"></span>
+                </p>
+            </div>
+            <button onclick="closeModal('seatPricingModal')" class="text-gray-400 hover:text-gray-600 text-3xl">
+                ×
+            </button>
+        </div>
+
+        <!-- Tabs for pricing options -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('individual')">💺 Individual Pricing</div>
+            <div class="tab" onclick="switchTab('bulk')">📊 Bulk Pricing</div>
+        </div>
+
+        <!-- Individual Pricing Tab -->
+        <div id="individualTab" class="tab-content">
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-4">Seat Type Filter</label>
+                <div class="seat-type-filter">
+                    <button class="filter-btn active" onclick="filterSeatsByType('all')">All Seats</button>
+                    <button class="filter-btn" onclick="filterSeatsByType('WINDOW')">🪟 Window</button>
+                    <button class="filter-btn" onclick="filterSeatsByType('MIDDLE')">🪢 Middle</button>
+                    <button class="filter-btn" onclick="filterSeatsByType('AISLE')">🚪 Aisle</button>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Select Seats & Set Price</label>
+                <div id="seatsContainer" class="seat-grid"></div>
+            </div>
+
+            <div class="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
+                <input
+                        type="number"
+                        id="individualPrice"
+                        placeholder="Enter price"
+                        class="w-full p-3 input-modern rounded-lg"
+                        min="0"
+                        step="0.01"
+                />
+            </div>
+
+            <button
+                    onclick="applyIndividualPrices()"
+                    class="w-full btn-primary text-white px-6 py-3 rounded-lg font-semibold shadow-lg"
+            >
+                Apply Prices to Selected Seats
+            </button>
+        </div>
+
+        <!-- Bulk Pricing Tab -->
+        <div id="bulkTab" class="tab-content hidden">
+            <div class="mb-6 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Set Price for All Seats in Route</h4>
+                <p class="text-gray-600 text-sm mb-4">Apply the same price to all seats across all buses operating this route.</p>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Price (₹)</label>
+                    <input
+                            type="number"
+                            id="bulkPrice"
+                            placeholder="Enter price for all seats"
+                            class="w-full p-3 input-modern rounded-lg text-lg"
+                            min="0"
+                            step="0.01"
+                    />
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-gray-200 mb-4">
+                    <p class="text-sm text-gray-600">
+                        <strong>Note:</strong> This will set the price for all seats in this route.
+                        Individual seat prices set previously will be updated.
+                    </p>
+                </div>
+
+                <button
+                        onclick="applyBulkPrices()"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition"
+                >
+                    Apply Bulk Price
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+            <button
+                    onclick="closeModal('seatPricingModal')"
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition"
+            >
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const jwt = localStorage.getItem("jwt");
+    const username = localStorage.getItem("username") || "User";
+
+    const content = document.getElementById("content");
+    const firstLetter = document.getElementById("userLetter");
+
+    if (jwt) {
+        firstLetter.innerHTML = `<span class="text-purple-600 font-bold">${username.charAt(0).toUpperCase()}</span>`;
+        content.innerHTML = `
+            <p class="font-semibold text-sm">Admin User</p>
+            <p class="font-medium text-sm">${username}</p>
+        `;
+    }
+
+    function getAuthHeaders() {
+        return {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("jwt"),
+        };
+    }
+
+    let currentRouteId = null;
+    let currentBusId = null;
+    let routes = [];
+    let buses = [];
+    let seats = [];
+    let selectedSeats = new Set();
+    let currentSeatFilter = 'all';
+
+    async function loadBuses() {
+        try {
+            const res = await fetch("/api/v1/admin/buses/all", {
+                headers: getAuthHeaders(),
+            });
+            const page = await res.json();
+            buses = page.content || page.data || page || [];
+
+            if (!Array.isArray(buses)) {
+                buses = [];
+            }
+
+            const createSelect = document.getElementById("busId");
+            const editSelect = document.getElementById("editBusId");
+
+            [createSelect, editSelect].forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">Select a Bus</option>';
+                buses.forEach(bus => {
+                    const opt = document.createElement("option");
+                    opt.value = bus.busId;
+                    opt.textContent = `${bus.busNumber} - ${bus.operatorName}`;
+                    select.appendChild(opt);
+                });
+            });
+        } catch (error) {
+            console.error("Error loading buses:", error);
+        }
+    }
+
+    async function loadRoutes() {
+        try {
+            const res = await fetch("/api/v1/admin/routes/all-routes", {
+                headers: getAuthHeaders(),
+            });
+            const page = await res.json();
+            routes = page.content || page.data || page || [];
+
+            if (!Array.isArray(routes)) {
+                routes = [];
+            }
+
+            const tbody = document.getElementById("routesBody");
+            tbody.innerHTML = "";
+
+            routes.forEach((route) => {
+                const tr = document.createElement("tr");
+                tr.className = "table-row";
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="text-lg">📍</span>
+                            </div>
+                            <span class="font-semibold text-gray-800">${route.startPoint}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">${route.endPoint}</td>
+                    <td class="px-6 py-4">
+                        <span class="badge bg-purple-100 text-purple-700">${route.busNumber || "N/A"}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="font-semibold text-gray-800">${route.totalDistance || "N/A"}</span>
+                        <span class="text-gray-500 text-sm ml-1">km</span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700">${route.totalTravelTime || "N/A"}</td>
+                    <td class="px-6 py-4">
+                        <span class="badge bg-blue-100 text-blue-700">${route.routePoints ? route.routePoints.length : 0}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="openSeatPricingModal(${route.routeId}, '${route.startPoint} → ${route.endPoint}', ${route.busId})"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">💰 Pricing</button>
+                            <button onclick="openPointsModal(${route.routeId}, '${route.startPoint} → ${route.endPoint}')"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Points</button>
+                            <button onclick="editRoute(${route.routeId})"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Edit</button>
+                            <button onclick="deleteRoute(${route.routeId})"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition shadow-sm">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats();
+        } catch (error) {
+            console.error("Error loading routes:", error);
+        }
+    }
+
+    function updateStats() {
+        document.getElementById("totalRoutes").textContent = routes.length;
+        const totalDist = routes.reduce((sum, route) => sum + (route.totalDistance || 0), 0);
+        document.getElementById("totalDistanceDisplay").textContent = totalDist;
+        document.getElementById("activeRoutes").textContent = routes.length;
+        const startPoints = new Set(routes.map(r => r.startPoint)).size;
+        document.getElementById("startPoints").textContent = startPoints;
+    }
+
+    function openCreateRouteModal() {
+        document.getElementById("createRouteModal").classList.remove("hidden");
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add("hidden");
+    }
+
+    document.getElementById("createRouteForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            busId: parseInt(document.getElementById("busId").value),
+            startPoint: document.getElementById("startPoint").value,
+            endPoint: document.getElementById("endPoint").value,
+            totalDistance: parseInt(document.getElementById("totalDistance").value) || null,
+            totalTravelTime: document.getElementById("totalTravelTime").value || null,
+        };
+
+        try {
+            const res = await fetch("/api/v1/admin/routes", {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error("Failed to create route");
+            closeModal("createRouteModal");
+            document.getElementById("createRouteForm").reset();
+            loadRoutes();
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Route created successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } catch (error) {
+            Swal.fire("Error", "Failed to create route", "error");
+        }
+    };
+
+    async function editRoute(routeId) {
+        const route = routes.find(r => r.routeId === routeId);
+        if (!route) return;
+
+        document.getElementById("editRouteId").value = route.routeId;
+        document.getElementById("editBusId").value = route.busId;
+        document.getElementById("editStartPoint").value = route.startPoint;
+        document.getElementById("editEndPoint").value = route.endPoint;
+        document.getElementById("editTotalDistance").value = route.totalDistance || "";
+        document.getElementById("editTotalTravelTime").value = route.totalTravelTime || "";
+
+        document.getElementById("editRouteModal").classList.remove("hidden");
+    }
+
+    document.getElementById("editRouteForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const routeId = document.getElementById("editRouteId").value;
+        const data = {
+            busId: parseInt(document.getElementById("editBusId").value),
+            startPoint: document.getElementById("editStartPoint").value,
+            endPoint: document.getElementById("editEndPoint").value,
+            totalDistance: parseInt(document.getElementById("editTotalDistance").value) || null,
+            totalTravelTime: document.getElementById("editTotalTravelTime").value || null,
+        };
+
+        try {
+            const res = await fetch(`/api/v1/admin/routes/${routeId}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error("Failed to update route");
+            closeModal("editRouteModal");
+            loadRoutes();
+            Swal.fire({
+                icon: "success",
+                title: "Updated!",
+                text: "Route updated successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } catch (error) {
+            Swal.fire("Error", "Failed to update route", "error");
+        }
+    };
+
+    async function deleteRoute(routeId) {
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`/api/v1/admin/routes/${routeId}`, {
+                    method: "DELETE",
+                    headers: getAuthHeaders(),
+                });
+                if (!res.ok) throw new Error("Route Delete Failed");
+                loadRoutes();
+                Swal.fire({
+                    icon: "success",
+                    title: "Deleted!",
+                    text: "Route has been deleted.",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } catch (error) {
+                Swal.fire("Error", "Failed to delete route", "error");
+            }
+        }
+    }
+
+    async function openPointsModal(routeId, routeInfo) {
+        currentRouteId = routeId;
+        document.getElementById("modalRouteInfo").textContent = routeInfo;
+        document.getElementById("routePointsModal").classList.remove("hidden");
+
+        try {
+            const res = await fetch(`/api/v1/admin/routes/${routeId}`, {
+                headers: getAuthHeaders(),
+            });
+            const route = await res.json();
+            let points = route.routePoints || [];
+
+            if (!Array.isArray(points)) {
+                points = points.data || points.content || [];
+            }
+            renderPoints(points);
+        } catch (error) {
+            console.error("Error loading points:", error);
+            renderPoints([]);
+        }
+    }
+
+    function renderPoints(points) {
+        const tbody = document.getElementById("pointsTableBody");
+        tbody.innerHTML = "";
+
+        points.forEach((point) => {
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-gray-50";
+            tr.innerHTML = `
+                <td class="p-4">
+                    <input type="number" value="${point.sequenceNo || ''}"
+                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                    data-point-id="${point.pointId}" data-field="sequenceNo" min="1">
+                </td>
+                <td class="p-4">
+                    <input type="text" value="${point.locationName}"
+                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                    data-point-id="${point.pointId}" data-field="locationName">
+                </td>
+                <td class="p-4 text-center">
+                    <button onclick="deletePoint(${point.pointId})"
+                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function addPointRow() {
+        const tbody = document.getElementById("pointsTableBody");
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50 bg-green-50";
+        tr.innerHTML = `
+            <td class="p-4">
+                <input type="number" placeholder="1" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="sequenceNo" min="1">
+            </td>
+            <td class="p-4">
+                <input type="text" placeholder="e.g. Delhi Terminal" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="locationName">
+            </td>
+            <td class="p-4 text-center">
+                <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    async function deletePoint(pointId) {
+        const result = await Swal.fire({
+            title: "Delete point?",
+            text: "This action cannot be undone",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Yes, delete it!",
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(
+                    `/api/v1/admin/routes/${currentRouteId}/points/${pointId}`,
+                    {
+                        method: "DELETE",
+                        headers: getAuthHeaders(),
+                    }
+                );
+                if (!res.ok) throw new Error("Point Delete failed");
+
+                openPointsModal(
+                    currentRouteId,
+                    document.getElementById("modalRouteInfo").textContent
+                );
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Deleted!",
+                    text: "Point has been deleted.",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } catch (error) {
+                Swal.fire("Error", "Failed to delete point", "error");
+            }
+        }
+    }
+
+    async function saveAllPoints() {
+        const rows = document.querySelectorAll("#pointsTableBody tr");
+        const updates = [];
+        const creates = [];
+
+        rows.forEach((row) => {
+            const locationName = row.querySelector('[data-field="locationName"]').value;
+            const sequenceNo = parseInt(row.querySelector('[data-field="sequenceNo"]').value) || null;
+            const pointId = row.querySelector("[data-point-id]")?.dataset.pointId;
+
+            const pointData = { locationName, sequenceNo };
+
+            if (pointId) {
+                updates.push(
+                    fetch(`/api/v1/admin/routes/${currentRouteId}/points/${pointId}`, {
+                        method: "PUT",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(pointData),
+                    })
+                );
+            } else {
+                creates.push(
+                    fetch(`/api/v1/admin/routes/${currentRouteId}/points`, {
+                        method: "POST",
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify([pointData]),
+                    })
+                );
+            }
+        });
+
+        try {
+            const results = await Promise.all([...updates, ...creates]);
+
+            results.forEach((res) => {
+                if (!res.ok) throw new Error("Point save failed");
+            });
+
+            closeModal("routePointsModal");
+
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "All points saved successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            loadRoutes();
+        } catch (error) {
+            Swal.fire("Error", "Failed to save points", "error");
+        }
+    }
+
+    // Seat Pricing Functions
+    async function openSeatPricingModal(routeId, routeInfo, busId) {
+        currentRouteId = routeId;
+        currentBusId = busId;
+        selectedSeats.clear();
+        currentSeatFilter = 'all';
+
+        document.getElementById("seatPricingRouteInfo").textContent = routeInfo;
+        document.getElementById("seatPricingBusInfo").textContent = buses.find(b => b.busId === busId)?.busNumber || "N/A";
+        document.getElementById("seatPricingModal").classList.remove("hidden");
+
+        await loadSeatsForBus(busId);
+        renderSeats();
+    }
+
+    async function loadSeatsForBus(busId) {
+        try {
+            const res = await fetch(`/api/v1/admin/buses/${busId}`, {
+                headers: getAuthHeaders(),
+            });
+            const bus = await res.json();
+            let seatArray = bus.seats || [];
+
+            if (!Array.isArray(seatArray)) {
+                seatArray = seatArray.data || seatArray.content || [];
+            }
+            seats = seatArray;
+        } catch (error) {
+            console.error("Error loading seats:", error);
+            seats = [];
+        }
+    }
+
+    function filterSeatsByType(type) {
+        currentSeatFilter = type;
+
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        renderSeats();
+    }
+
+    function renderSeats() {
+        const container = document.getElementById("seatsContainer");
+        container.innerHTML = "";
+
+        let filteredSeats = seats;
+        if (currentSeatFilter !== 'all') {
+            filteredSeats = seats.filter(s => s.seatType === currentSeatFilter);
+        }
+
+        const seatGrid = document.createElement("div");
+        seatGrid.className = "seat-layout-grid";
+        seatGrid.style.cssText = "display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; padding: 16px; background: #f9fafb; border-radius: 12px;";
+
+        filteredSeats.forEach(seat => {
+            const seatDiv = document.createElement("div");
+            seatDiv.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 12px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                background: white;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                user-select: none;
+            `;
+
+            if (selectedSeats.has(seat.seatId)) {
+                seatDiv.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                seatDiv.style.borderColor = '#667eea';
+                seatDiv.style.color = 'white';
+            }
+
+            const seatSVG = document.createElement("svg");
+            seatSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            seatSVG.setAttribute("width", "28");
+            seatSVG.setAttribute("height", "28");
+            seatSVG.setAttribute("viewBox", "0 0 26 27");
+            seatSVG.setAttribute("fill", "none");
+            seatSVG.style.marginBottom = "4px";
+
+            const bgRect = document.createElement("rect");
+            bgRect.setAttribute("width", "26");
+            bgRect.setAttribute("height", "27");
+            bgRect.setAttribute("fill", selectedSeats.has(seat.seatId) ? "#ffffff" : "#FFFFFF");
+
+            const g = document.createElement("g");
+            g.setAttribute("clip-path", "url(#clip0_53838_44859)");
+
+            const path = document.createElement("path");
+            path.setAttribute("d", "M2.84407 9.51883V4.40009C2.84407 2.61259 4.30657 1.15009 6.09407 1.15009H19.9066C21.6941 1.15009 23.1566 2.61259 23.1566 4.40009V9.51883M22.9941 9.51883H22.2628C21.6128 9.51883 21.1253 10.0876 21.1253 10.6563V17.7251C21.1253 19.6751 19.5816 21.2188 17.6316 21.2188H8.45032C6.50032 21.2188 4.95657 19.6751 4.95657 17.7251V10.6563C4.95657 10.0063 4.46907 9.51883 3.81907 9.51883H3.00657C1.70657 9.51883 0.731567 10.5751 0.731567 11.7938V22.5188C0.731567 24.3063 2.19407 25.7688 3.98157 25.7688H22.1003C23.8878 25.7688 25.3503 24.3063 25.3503 22.5188V11.8751C25.3503 10.5751 24.2941 9.51883 22.9941 9.51883Z");
+            path.setAttribute("stroke", selectedSeats.has(seat.seatId) ? "#ffffff" : "#007B28");
+            path.setAttribute("stroke-width", "1.5");
+            path.setAttribute("stroke-miterlimit", "10");
+
+            g.appendChild(path);
+            seatSVG.appendChild(bgRect);
+            seatSVG.appendChild(g);
+
+            const seatNumber = document.createElement("div");
+            seatNumber.style.cssText = "font-weight: 600; font-size: 13px; margin-top: 4px;";
+            seatNumber.textContent = seat.seatNumber;
+
+            const seatType = document.createElement("div");
+            seatType.style.cssText = "font-size: 11px; opacity: 0.7; margin-top: 2px;";
+            seatType.textContent = seat.seatType;
+
+            const deckType = document.createElement("div");
+            deckType.style.cssText = "font-size: 10px; opacity: 0.6; margin-top: 2px;";
+            deckType.textContent = `(${seat.deckType})`;
+
+            seatDiv.appendChild(seatSVG);
+            seatDiv.appendChild(seatNumber);
+            seatDiv.appendChild(seatType);
+            seatDiv.appendChild(deckType);
+
+            seatDiv.onmouseenter = () => {
+                if (!selectedSeats.has(seat.seatId)) {
+                    seatDiv.style.borderColor = '#667eea';
+                    seatDiv.style.background = '#f0f4ff';
+                }
+            };
+
+            seatDiv.onmouseleave = () => {
+                if (!selectedSeats.has(seat.seatId)) {
+                    seatDiv.style.borderColor = '#e5e7eb';
+                    seatDiv.style.background = 'white';
+                }
+            };
+
+            seatDiv.onclick = (e) => {
+                e.preventDefault();
+                if (selectedSeats.has(seat.seatId)) {
+                    selectedSeats.delete(seat.seatId);
+                } else {
+                    selectedSeats.add(seat.seatId);
+                }
+                renderSeats();
+            };
+
+            seatGrid.appendChild(seatDiv);
+        });
+
+        container.appendChild(seatGrid);
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+
+        event.target.classList.add('active');
+        document.getElementById(tab + 'Tab').classList.remove('hidden');
+    }
+
+    async function applyIndividualPrices() {
+        const price = parseFloat(document.getElementById("individualPrice").value);
+
+        if (!price || price <= 0) {
+            Swal.fire("Error", "Please enter a valid price", "error");
+            return;
+        }
+
+        if (selectedSeats.size === 0) {
+            Swal.fire("Error", "Please select at least one seat", "error");
+            return;
+        }
+
+        try {
+            const priceRequests = Array.from(selectedSeats).map(seatId =>
+                fetch("/api/v1/admin/seat-prices", {
+                    method: "POST",
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        routeId: currentRouteId,
+                        seatId: seatId,
+                        price: price
+                    })
+                })
+            );
+
+            const results = await Promise.all(priceRequests);
+
+            for (const res of results) {
+                if (!res.ok) throw new Error("Failed to set price");
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: `Price applied to ${selectedSeats.size} seat(s)`,
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            selectedSeats.clear();
+            document.getElementById("individualPrice").value = "";
+            renderSeats();
+        } catch (error) {
+            console.error("Error:", error);
+            Swal.fire("Error", "Failed to apply prices", "error");
+        }
+    }
+
+    async function applyBulkPrices() {
+        const price = parseFloat(document.getElementById("bulkPrice").value);
+
+        if (!price || price <= 0) {
+            Swal.fire("Error", "Please enter a valid price", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/v1/admin/seat-prices/bulk", {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    routeId: currentRouteId,
+                    price: price
+                })
+            });
+
+            if (!res.ok) throw new Error("Failed to apply bulk price");
+
+            Swal.fire({
+                icon: "success",
+                title: "Success!",
+                text: "Bulk price applied to all seats in this route",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+
+            document.getElementById("bulkPrice").value = "";
+        } catch (error) {
+            console.error("Error:", error);
+            Swal.fire("Error", "Failed to apply bulk prices", "error");
+        }
+    }
+
+    loadBuses();
+    loadRoutes();
+</script>
+</body>
+</html>

@@ -27,6 +27,16 @@ public class WebController {
         return "admin1";
     }
 
+    @GetMapping("/routes")
+    public String routes() {
+        return "routes";
+    }
+
+    @GetMapping("/schedule")
+    public String schedule() {
+        return "schedule";
+    }
+
     @GetMapping("/bus")
     public String bus() {
         return "bus";

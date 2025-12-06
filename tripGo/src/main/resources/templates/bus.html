@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" th:href="@{/assets/favicon.png}">
     <title>Admin Panel - TripGo</title>
     <link
             href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
@@ -116,11 +117,16 @@
                     <span class="font-medium">Buses</span>
                 </a>
                 <a
-                        href="#"
+                        href="/api/v1/routes"
                         class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition"
                 >
                     <span class="text-xl">🗺️</span>
                     <span class="font-medium">Routes</span>
+                </a>
+                <a href="/api/v1/schedule"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10  rounded-lg p-3 transition">
+                    <span class="text-xl">📅</span>
+                    <span class="font-medium">Schedules</span>
                 </a>
                 <a
                         href="#"
@@ -984,7 +990,7 @@ class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-
 `;
       tbody.appendChild(tr);
 
-      // === VISUAL LAYOUT (new) ===
+      //  VISUAL LAYOUT
       const seatDiv = document.createElement("div");
       seatDiv.className = `
 flex items-center justify-center font-semibold cursor-pointer

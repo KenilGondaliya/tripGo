@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" th:href="@{/assets/favicon.png}">
     <title>Admin Panel - TripGo</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -91,12 +92,12 @@
     <!-- Sidebar -->
     <aside class="w-64 gradient-bg text-white hidden md:block">
         <div class="p-6">
-            <div class="flex items-center space-x-3 mb-8">
+            <a href="/api/v1/" class="flex items-center space-x-3 mb-8 ">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                     <span class="text-2xl">🚌</span>
                 </div>
                 <h1 class="text-2xl font-bold">TripGo</h1>
-            </div>
+            </a>
 
             <nav class="space-y-2">
                 <a href="dashboard.html" class="flex items-center space-x-3 bg-white bg-opacity-20 rounded-lg p-3 backdrop-blur-sm">
@@ -107,9 +108,14 @@
                     <span class="text-xl">🚌</span>
                     <span class="font-medium">Buses</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
+                <a href="/api/v1/routes" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
                     <span class="text-xl">🗺️</span>
                     <span class="font-medium">Routes</span>
+                </a>
+                <a href="/api/v1/schedule"
+                   class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10  rounded-lg p-3 transition">
+                    <span class="text-xl">📅</span>
+                    <span class="font-medium">Schedules</span>
                 </a>
                 <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-10 rounded-lg p-3 transition">
                     <span class="text-xl">🎫</span>
@@ -137,15 +143,14 @@
 
 
     <main class="flex flex-col flex-1 overflow-y-auto justify-center items-center bg-white ">
-        <lottie-player
-                src="/static/assets/UnderConstructionAnimation.json"
-                background="transparent"
-                speed="1"
-                style="width: 220px; height: 220px;"
-                loop
-                autoplay>
-        </lottie-player>
-
+        <!--        <lottie-player-->
+        <!--                src="/static/assets/UnderConstructionAnimation.json"-->
+        <!--                background="transparent"-->
+        <!--                speed="1"-->
+        <!--                style="width: 220px; height: 220px;"-->
+        <!--                loop-->
+        <!--                autoplay>-->
+        <!--        </lottie-player>-->
 
         <h1 class="text-4xl font-extrabold tracking-wide bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text drop-shadow-md">
             Coming Soon
