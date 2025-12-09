@@ -11,4 +11,6 @@ public interface SchedulePointRepository extends JpaRepository<SchedulePoint, Lo
     List<SchedulePoint> findBySchedule_ScheduleIdOrderByDepartureTimeAsc(Long scheduleId);
     List<SchedulePoint> findBySchedule_ScheduleIdAndIsBoardingPointTrue(Long scheduleId);
     List<SchedulePoint> findBySchedule_ScheduleIdAndIsDroppingPointTrue(Long scheduleId);
+
+    void deleteBySchedule_ScheduleId(Long scheduleId);
 }

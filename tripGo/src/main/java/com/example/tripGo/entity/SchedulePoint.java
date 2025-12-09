@@ -19,23 +19,26 @@ public class SchedulePoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long schedulePointId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
     @Column(nullable = false, length = 200)
     private String locationName;
 
+    @Column(name = "arrival_time")
     private LocalTime arrivalTime;
+
+    @Column(name = "departure_time")
     private LocalTime departureTime;
 
-    @Column(nullable = false)
+    @Column(name = "is_boarding_point", nullable = false)
     private boolean isBoardingPoint = false;
 
-    @Column(nullable = false)
+    @Column(name = "is_dropping_point", nullable = false)
     private boolean isDroppingPoint = false;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")

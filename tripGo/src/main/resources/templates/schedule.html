@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" th:href="@{/assets/favicon.png}">
+    <link rel="icon" type="image/png" href="/api/v1/images/favicon.png">
     <title>Admin Panel - TripGo Schedules</title>
     <link
             href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
@@ -747,200 +747,399 @@
         }
     }
 
-    // Schedule Points Management
-    async function openPointsModal(scheduleId, scheduleInfo) {
-        currentScheduleId = scheduleId;
-        document.getElementById("modalScheduleInfo").textContent = scheduleInfo;
-        document.getElementById("schedulePointsModal").classList.remove("hidden");
+// Global tracking variables
+let deletedPointIds = new Set(); // Use Set to avoid duplicates
+let originalPointsMap = new Map(); // Map of pointId -> original point data
 
-        try {
-            const res = await fetch(`/api/v1/admin/schedules/${scheduleId}`, {
-                headers: getAuthHeaders(),
-            });
-            const schedule = await res.json();
-            let points = schedule.points || [];
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
-            if (!Array.isArray(points)) {
-                points = points.data || points.content || [];
-            }
-            renderPoints(points);
-        } catch (error) {
-            console.error("Error loading points:", error);
-            renderPoints([]);
-        }
-    }
+async function openPointsModal(scheduleId, scheduleInfo) {
+    currentScheduleId = scheduleId;
+    deletedPointIds.clear(); // Reset
+    originalPointsMap.clear(); // Reset
 
-    function renderPoints(points) {
-        const tbody = document.getElementById("pointsTableBody");
-        tbody.innerHTML = "";
+    document.getElementById("modalScheduleInfo").textContent = scheduleInfo;
+    document.getElementById("schedulePointsModal").classList.remove("hidden");
 
-        points.forEach((point) => {
-            const tr = document.createElement("tr");
-            tr.className = "hover:bg-gray-50";
-            tr.innerHTML = `
-                <td class="p-4">
-                    <input type="text" value="${point.locationName || ''}"
-                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-                    data-point-id="${point.id || ''}" data-field="locationName">
-                </td>
-                <td class="p-4">
-                    <input type="time" value="${point.arrivalTime || ''}"
-                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-                    data-point-id="${point.id || ''}" data-field="arrivalTime">
-                </td>
-                <td class="p-4">
-                    <input type="time" value="${point.departureTime || ''}"
-                    class="w-full p-2 border border-gray-300 rounded-lg input-modern"
-                    data-point-id="${point.id || ''}" data-field="departureTime">
-                </td>
-                <td class="p-4 text-center">
-                    <input type="checkbox" ${point.isBoardingPoint ? 'checked' : ''}
-                    class="w-5 h-5 text-green-600 rounded"
-                    data-point-id="${point.id || ''}" data-field="isBoardingPoint">
-                </td>
-                <td class="p-4 text-center">
-                    <input type="checkbox" ${point.isDroppingPoint ? 'checked' : ''}
-                    class="w-5 h-5 text-red-600 rounded"
-                    data-point-id="${point.id || ''}" data-field="isDroppingPoint">
-                </td>
-                <td class="p-4 text-center">
-                    <button onclick="deletePoint(${point.id})"
-                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium">Delete</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+    try {
+        const res = await fetch(`/api/v1/admin/schedules/${scheduleId}`, {
+            headers: getAuthHeaders(),
         });
+
+        if (!res.ok) throw new Error("Failed to load schedule points");
+
+        const schedule = await res.json();
+        let points = schedule.points || [];
+
+        if (!Array.isArray(points)) {
+            points = points.data || points.content || [];
+        }
+
+        console.log("📥 Loaded points from backend:", points);
+
+        // Store original points in Map for quick lookup
+        points.forEach(point => {
+            const id = point.id || point.schedulePointId || point.pointId;
+            if (id) {
+                originalPointsMap.set(String(id), {
+                    locationName: point.locationName,
+                    arrivalTime: point.arrivalTime,
+                    departureTime: point.departureTime,
+                    isBoardingPoint: point.isBoardingPoint === true || point.boardingPoint === true,
+                    isDroppingPoint: point.isDroppingPoint === true || point.droppingPoint === true
+                });
+            }
+        });
+
+        console.log("💾 Stored original points:", Array.from(originalPointsMap.entries()));
+
+        renderPoints(points);
+    } catch (error) {
+        console.error("❌ Error loading points:", error);
+        Swal.fire("Error", "Failed to load schedule points", "error");
+        renderPoints([]);
+    }
+}
+
+function renderPoints(points) {
+    const tbody = document.getElementById("pointsTableBody");
+    tbody.innerHTML = "";
+
+    if (points.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No points added yet. Click "Add Point" to add one.</td></tr>';
+        return;
     }
 
-    function addPointRow() {
-        const tbody = document.getElementById("pointsTableBody");
+    points.forEach((point) => {
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-gray-50 bg-green-50";
+        tr.className = "hover:bg-gray-50";
+
+        const pointId = point.id || point.schedulePointId || point.pointId;
+        if (pointId) {
+            tr.dataset.pointId = String(pointId);
+            tr.dataset.existing = "true"; // Mark as existing point
+        }
+
+        const isBoardingPoint = point.isBoardingPoint === true || point.boardingPoint === true;
+        const isDroppingPoint = point.isDroppingPoint === true || point.droppingPoint === true;
+
+        console.log(`🎨 Rendering point ${pointId}:`, point);
+
         tr.innerHTML = `
             <td class="p-4">
-                <input type="text" placeholder="e.g. Delhi Terminal" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="locationName">
+                <input type="text" value="${escapeHtml(point.locationName || '')}"
+                       class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                       data-field="locationName">
             </td>
             <td class="p-4">
-                <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="arrivalTime">
+                <input type="time" value="${point.arrivalTime ? point.arrivalTime.substring(0, 5) : ''}"
+                       class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                       data-field="arrivalTime">
             </td>
             <td class="p-4">
-                <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern" data-field="departureTime">
+                <input type="time" value="${point.departureTime ? point.departureTime.substring(0, 5) : ''}"
+                       class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                       data-field="departureTime">
             </td>
             <td class="p-4 text-center">
-                <input type="checkbox" class="w-5 h-5 text-green-600 rounded" data-field="isBoardingPoint">
+                <input type="checkbox" ${isBoardingPoint ? 'checked' : ''}
+                       class="w-5 h-5 text-green-600 rounded cursor-pointer"
+                       data-field="isBoardingPoint">
             </td>
             <td class="p-4 text-center">
-                <input type="checkbox" class="w-5 h-5 text-red-600 rounded" data-field="isDroppingPoint">
+                <input type="checkbox" ${isDroppingPoint ? 'checked' : ''}
+                       class="w-5 h-5 text-red-600 rounded cursor-pointer"
+                       data-field="isDroppingPoint">
             </td>
             <td class="p-4 text-center">
-                <button onclick="this.closest('tr').remove()" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">Remove</button>
+                <button onclick="markForDeletion('${pointId}')"
+                        data-point-id="${pointId}"
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition">
+                    Delete
+                </button>
             </td>
         `;
         tbody.appendChild(tr);
+    });
+}
+
+function addPointRow() {
+    const tbody = document.getElementById("pointsTableBody");
+
+    // Remove empty message if exists
+    const emptyRow = tbody.querySelector('tr td[colspan="6"]');
+    if (emptyRow) {
+        emptyRow.parentElement.remove();
     }
 
-    async function deletePoint(pointId) {
-        const result = await Swal.fire({
-            title: "Delete point?",
-            text: "This action cannot be undone",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#dc2626",
-            cancelButtonColor: "#6b7280",
-            confirmButtonText: "Yes, delete it!",
-        });
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-gray-50 bg-green-50";
+    tr.dataset.isNew = "true"; // Mark as new unsaved row
 
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(
-                    `/api/v1/admin/schedules/${currentScheduleId}/points/${pointId}`,
-                    {
-                        method: "DELETE",
-                        headers: getAuthHeaders(),
-                    }
-                );
-                if (!res.ok) throw new Error("Point Delete failed");
+    tr.innerHTML = `
+        <td class="p-4">
+            <input type="text" placeholder="e.g. Surat Station"
+                   class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                   data-field="locationName" required>
+        </td>
+        <td class="p-4">
+            <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                   data-field="arrivalTime">
+        </td>
+        <td class="p-4">
+            <input type="time" class="w-full p-2 border border-gray-300 rounded-lg input-modern"
+                   data-field="departureTime">
+        </td>
+        <td class="p-4 text-center">
+            <input type="checkbox" class="w-5 h-5 text-green-600 rounded cursor-pointer"
+                   data-field="isBoardingPoint">
+        </td>
+        <td class="p-4 text-center">
+            <input type="checkbox" class="w-5 h-5 text-red-600 rounded cursor-pointer"
+                   data-field="isDroppingPoint">
+        </td>
+        <td class="p-4 text-center">
+            <button onclick="removeNewRow(this)"
+                    class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition">
+                Remove
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
 
-                openPointsModal(
-                    currentScheduleId,
-                    document.getElementById("modalScheduleInfo").textContent
-                );
+function removeNewRow(button) {
+    const row = button.closest("tr");
+    row.remove();
 
-                Swal.fire({
-                    icon: "success",
-                    title: "Deleted!",
-                    text: "Point has been deleted.",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-            } catch (error) {
-                Swal.fire("Error", "Failed to delete point", "error");
-            }
+    const tbody = document.getElementById("pointsTableBody");
+    if (tbody.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No points added yet. Click "Add Point" to add one.</td></tr>';
+    }
+}
+
+function markForDeletion(pointId) {
+    const row = document.querySelector(`tr[data-point-id="${pointId}"]`);
+    if (!row) return;
+
+    const button = row.querySelector('button[data-point-id="' + pointId + '"]');
+
+    if (deletedPointIds.has(pointId)) {
+        // Undo deletion
+        deletedPointIds.delete(pointId);
+        row.style.backgroundColor = "";
+        row.style.opacity = "";
+        row.style.textDecoration = "";
+        button.textContent = "Delete";
+        button.className = "bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition";
+        console.log(`↩️ Unmarked point ${pointId} for deletion`);
+    } else {
+        // Mark for deletion
+        deletedPointIds.add(pointId);
+        row.style.backgroundColor = "#fee2e2";
+        row.style.opacity = "0.6";
+        row.style.textDecoration = "line-through";
+        button.textContent = "Undo";
+        button.className = "bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition";
+        console.log(`🗑️ Marked point ${pointId} for deletion`);
+    }
+}
+
+async function saveAllPoints() {
+    const tbody = document.getElementById("pointsTableBody");
+    const rows = tbody.querySelectorAll("tr");
+
+    // Check if only empty message
+    if (rows.length === 1 && rows[0].querySelector('td[colspan="6"]')) {
+        Swal.fire("Error", "Please add at least one point", "error");
+        return;
+    }
+
+    const toCreate = [];
+    const toUpdate = [];
+    const toDelete = Array.from(deletedPointIds);
+
+    console.log("💾 Starting save operation...");
+    console.log("Original points map:", Array.from(originalPointsMap.entries()));
+    console.log("Points marked for deletion:", toDelete);
+
+    // Process all rows
+    for (const row of rows) {
+        if (row.querySelector('td[colspan="6"]')) continue; // Skip empty message
+
+        const pointId = row.dataset.pointId;
+        const isNew = row.dataset.isNew === "true";
+
+        // Skip if marked for deletion
+        if (pointId && deletedPointIds.has(pointId)) {
+            console.log(`⏭️ Skipping point ${pointId} - marked for deletion`);
+            continue;
         }
-    }
 
-    async function saveAllPoints() {
-        const rows = document.querySelectorAll("#pointsTableBody tr");
-        const updates = [];
-        const creates = [];
+        // Get current values
+        const locationName = row.querySelector('[data-field="locationName"]')?.value?.trim();
+        const arrivalTime = row.querySelector('[data-field="arrivalTime"]')?.value?.trim();
+        const departureTime = row.querySelector('[data-field="departureTime"]')?.value?.trim();
+        const isBoardingPoint = row.querySelector('[data-field="isBoardingPoint"]')?.checked || false;
+        const isDroppingPoint = row.querySelector('[data-field="isDroppingPoint"]')?.checked || false;
 
-        rows.forEach((row) => {
-            const locationName = row.querySelector('[data-field="locationName"]').value;
-            const arrivalTime = row.querySelector('[data-field="arrivalTime"]').value;
-            const departureTime = row.querySelector('[data-field="departureTime"]').value;
-            const isBoardingPoint = row.querySelector('[data-field="isBoardingPoint"]').checked;
-            const isDroppingPoint = row.querySelector('[data-field="isDroppingPoint"]').checked;
-            const pointId = row.querySelector("[data-point-id]")?.dataset.pointId;
+        // Validation
+        if (!locationName) {
+            Swal.fire("Error", "Location name is required for all points", "error");
+            return;
+        }
 
-            const pointData = {
-                locationName,
-                arrivalTime: arrivalTime ? arrivalTime + ":00" : null,
-                departureTime: departureTime ? departureTime + ":00" : null,
-                isBoardingPoint,
-                isDroppingPoint
-            };
+        if (!isBoardingPoint && !isDroppingPoint) {
+            Swal.fire("Error", "Each point must be either a boarding or dropping point (or both)", "error");
+            return;
+        }
 
-            if (pointId && pointId !== '') {
-                updates.push(
-                    fetch(`/api/v1/admin/schedules/${currentScheduleId}/points/${pointId}`, {
-                        method: "PUT",
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify(pointData),
-                    })
-                );
+        const formatTime = (t) => t ? (t.length === 5 ? t + ":00" : t) : null;
+
+        const currentData = {
+            locationName,
+            arrivalTime: formatTime(arrivalTime),
+            departureTime: formatTime(departureTime),
+            isBoardingPoint,
+            isDroppingPoint
+        };
+
+        if (isNew) {
+            // New point to create
+            toCreate.push(currentData);
+            console.log(`➕ Will CREATE new point:`, currentData);
+        } else if (pointId) {
+            // Check if existing point has changes
+            const original = originalPointsMap.get(pointId);
+            if (!original) {
+                console.warn(`⚠️ No original data for point ${pointId}`);
+                continue;
+            }
+
+            const arrivalChanged = (original.arrivalTime?.substring(0, 5) || '') !== (arrivalTime || '');
+            const departureChanged = (original.departureTime?.substring(0, 5) || '') !== (departureTime || '');
+
+            const hasChanges =
+                original.locationName !== locationName ||
+                arrivalChanged ||
+                departureChanged ||
+                original.isBoardingPoint !== isBoardingPoint ||
+                original.isDroppingPoint !== isDroppingPoint;
+
+            if (hasChanges) {
+                toUpdate.push({ id: pointId, data: currentData });
+                console.log(`✏️ Will UPDATE point ${pointId}:`, { original, current: currentData });
             } else {
-                creates.push(
-                    fetch(`/api/v1/admin/schedules/${currentScheduleId}/points`, {
-                        method: "POST",
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify([pointData]),
-                    })
-                );
+                console.log(`⏭️ Point ${pointId} unchanged - skipping`);
             }
-        });
-
-        try {
-            const results = await Promise.all([...updates, ...creates]);
-
-            results.forEach((res) => {
-                if (!res.ok) throw new Error("Point save failed");
-            });
-
-            closeModal("schedulePointsModal");
-
-            Swal.fire({
-                icon: "success",
-                title: "Success!",
-                text: "All points saved successfully",
-                showConfirmButton: false,
-                timer: 1500,
-            });
-
-            loadSchedules();
-        } catch (error) {
-            Swal.fire("Error", "Failed to save points", "error");
         }
     }
+
+    console.log("📋 Final operations:");
+    console.log(`  - CREATE: ${toCreate.length}`);
+    console.log(`  - UPDATE: ${toUpdate.length}`);
+    console.log(`  - DELETE: ${toDelete.length}`);
+
+    if (toCreate.length === 0 && toUpdate.length === 0 && toDelete.length === 0) {
+        closeModal("schedulePointsModal");
+        Swal.fire({
+            icon: "info",
+            title: "No Changes",
+            text: "No modifications were made",
+            showConfirmButton: false,
+            timer: 1500,
+        });
+        return;
+    }
+
+    try {
+        let deleteCount = 0;
+        let createCount = 0;
+        let updateCount = 0;
+
+        // 1. DELETE points
+        for (const pointId of toDelete) {
+            console.log(`🗑️ Deleting point ${pointId}...`);
+            const res = await fetch(`/api/v1/admin/schedules/${currentScheduleId}/points/${pointId}`, {
+                method: "DELETE",
+                headers: getAuthHeaders()
+            });
+
+            if (!res.ok) {
+                const error = await res.text();
+                throw new Error(`Failed to delete point ${pointId}: ${error}`);
+            }
+            deleteCount++;
+            console.log(`✅ Deleted point ${pointId}`);
+        }
+
+        // 2. CREATE new points
+        if (toCreate.length > 0) {
+            console.log(`➕ Creating ${toCreate.length} points...`, toCreate);
+            const res = await fetch(`/api/v1/admin/schedules/${currentScheduleId}/points`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(toCreate),
+            });
+
+            if (!res.ok) {
+                const error = await res.text();
+                throw new Error(`Failed to create points: ${error}`);
+            }
+            createCount = toCreate.length;
+            console.log(`✅ Created ${createCount} points`);
+        }
+
+        // 3. UPDATE existing points
+        for (const { id, data } of toUpdate) {
+            console.log(`✏️ Updating point ${id}...`, data);
+            const res = await fetch(`/api/v1/admin/schedules/${currentScheduleId}/points/${id}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+
+            if (!res.ok) {
+                const error = await res.text();
+                throw new Error(`Failed to update point ${id}: ${error}`);
+            }
+            updateCount++;
+            console.log(`✅ Updated point ${id}`);
+        }
+
+        closeModal("schedulePointsModal");
+
+        let message = [];
+        if (deleteCount > 0) message.push(`${deleteCount} deleted`);
+        if (createCount > 0) message.push(`${createCount} created`);
+        if (updateCount > 0) message.push(`${updateCount} updated`);
+
+        Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: message.join(", "),
+            showConfirmButton: false,
+            timer: 2000,
+        });
+
+        await loadSchedules(); // Refresh main table
+
+    } catch (error) {
+        console.error("❌ Save failed:", error);
+        Swal.fire("Error", error.message || "Failed to save points", "error");
+    }
+}
 
     // Initialize
     loadBuses();

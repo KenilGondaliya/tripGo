@@ -1,5 +1,6 @@
 package com.example.tripGo.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,8 @@ public class SchedulePointRequestDto {
     private String locationName;
     private LocalTime arrivalTime;
     private LocalTime departureTime;
-    private boolean isBoardingPoint;
-    private boolean isDroppingPoint;
+    @JsonProperty("isBoardingPoint")
+    private boolean boardingPoint;
+    @JsonProperty("isDroppingPoint")
+    private boolean droppingPoint;
 }
