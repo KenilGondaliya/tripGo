@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Booking - TripGo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #e63946;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stepper {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .stepper-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .stepper-steps::before {
+            content: '';
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .stepper-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stepper-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #999;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stepper-step.active .stepper-circle {
+            background: #e63946;
+            color: white;
+            border-color: #e63946;
+        }
+
+        .stepper-step.completed .stepper-circle {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .stepper-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #666;
+            text-align: center;
+        }
+
+        .stepper-step.active .stepper-label {
+            color: #e63946;
+            font-weight: 600;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .bus-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .bus-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .bus-info-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .bus-info-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .seat-layout-container {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .deck-section {
+            margin-bottom: 30px;
+        }
+
+        .deck-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .seat {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .seat:hover:not(.sold) {
+            border-color: #e63946;
+            background: #fff0f1;
+        }
+
+        .seat.selected {
+            background: #e63946;
+            border-color: #e63946;
+            color: white;
+        }
+
+        .seat.sold {
+            background: #e5e7eb;
+            border-color: #bbb;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .legend-box.selected {
+            background: #e63946;
+            border-color: #e63946;
+        }
+
+        .legend-box.sold {
+            background: #e5e7eb;
+            border-color: #bbb;
+        }
+
+        .points-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .points-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .points-section {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .points-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .point-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .point-item:hover {
+            border-color: #e63946;
+            background: #fff0f1;
+        }
+
+        .point-item.selected {
+            border-color: #e63946;
+            background: #fff0f1;
+        }
+
+        .point-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .point-item.selected .point-radio {
+            border-color: #e63946;
+            background: #e63946;
+        }
+
+        .point-item.selected .point-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .point-details {
+            flex: 1;
+        }
+
+        .point-time {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .point-name {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .popular-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .contact-section {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .passengers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .passenger-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .passenger-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .passenger-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .passenger-icon {
+            width: 32px;
+            height: 32px;
+            background: #e63946;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .passenger-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #e63946;
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
+        }
+
+        .gender-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .gender-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gender-option:hover {
+            border-color: #e63946;
+        }
+
+        .gender-option.selected {
+            border-color: #e63946;
+            background: #fff0f1;
+        }
+
+        .gender-option input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .price-breakdown {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .price-row.total {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .total-price {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #e63946;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-primary {
+            background: #e63946;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d32f39;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #e63946;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            background: #d4f4dd;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .whatsapp-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: #e5e7eb;
+            border-radius: 14px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #10b981;
+        }
+
+        .toggle-ball {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-ball {
+            left: 24px;
+        }
+
+        .selected-seats-display {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .seat-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <a href="/" class="logo">
+            <span style="font-size: 1.8rem;">🚌</span>
+            TripGo
+        </a>
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="breadcrumb">
+        <span id="fromCity">Surat</span>
+        <span>→</span>
+        <span id="toCity">Ahmedabad</span>
+    </div>
+
+    <div class="stepper">
+        <div class="stepper-steps">
+            <div class="stepper-step active" data-step="1">
+                <div class="stepper-circle">1</div>
+                <div class="stepper-label">Select seats</div>
+            </div>
+            <div class="stepper-step" data-step="2">
+                <div class="stepper-circle">2</div>
+                <div class="stepper-label">Board/Drop point</div>
+            </div>
+            <div class="stepper-step" data-step="3">
+                <div class="stepper-circle">3</div>
+                <div class="stepper-label">Passenger Info</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div>
+            <!-- Step 1: Seat Selection -->
+            <div class="step-content active" data-step="1">
+                <div class="step-title">Select your seats</div>
+
+                <div class="bus-info-card">
+                    <div class="bus-info-row">
+                        <span class="bus-info-label">Bus Name</span>
+                        <span class="bus-info-value" id="busName">Loading...</span>
+                    </div>
+                    <div class="bus-info-row">
+                        <span class="bus-info-label">Journey Time</span>
+                        <span class="bus-info-value" id="journeyTime">-</span>
+                    </div>
+                    <div class="bus-info-row">
+                        <span class="bus-info-label">Departure</span>
+                        <span class="bus-info-value" id="departure">-</span>
+                    </div>
+                </div>
+
+                <div class="seat-layout-container" id="seatContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading seats...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Boarding/Dropping Points -->
+            <div class="step-content" data-step="2">
+                <div class="step-title">Select boarding & dropping points</div>
+                <div class="points-container">
+                    <div class="points-section">
+                        <div class="section-title">Boarding points</div>
+                        <div class="points-list" id="boardingPointsList"></div>
+                    </div>
+                    <div class="points-section">
+                        <div class="section-title">Dropping points</div>
+                        <div class="points-list" id="droppingPointsList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Passenger Details -->
+            <div class="step-content" data-step="3">
+                <div class="step-title">Passenger details</div>
+
+                <div class="contact-section">
+                    <div style="font-weight: 600; color: #333; margin-bottom: 15px;">Contact details</div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="countryCode" value="+91 (IND)" style="flex: 0.6;" readonly>
+                            <input type="tel" id="contactPhone" placeholder="9016216538" style="flex: 1;" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email ID *</label>
+                        <input type="email" id="contactEmail" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State of Residence *</label>
+                        <select id="stateOfResidence" required>
+                            <option value="">Select State</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                        </select>
+                    </div>
+                    <div class="whatsapp-toggle" id="whatsappToggleContainer">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">💬</span>
+                            <span style="color: #666; font-size: 0.95rem;">Send booking details on WhatsApp</span>
+                        </div>
+                        <div class="toggle-switch active" id="whatsappToggle">
+                            <div class="toggle-ball"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-weight: 600; color: #333; margin-bottom: 15px;">Passenger details</div>
+                <div class="passengers-container" id="passengersContainer"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="prevBtn" style="display: none;">← Previous</button>
+                <button class="btn btn-primary" id="nextBtn">Next</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="summary-card">
+            <div class="summary-title">Booking Summary</div>
+
+            <div class="summary-item">
+                <span>Route</span>
+                <span class="summary-value" id="summaryRoute">-</span>
+            </div>
+
+            <div class="summary-item">
+                <span>Date</span>
+                <span class="summary-value" id="summaryDate">-</span>
+            </div>
+
+            <div class="summary-item">
+                <span>Seats Selected</span>
+                <span class="summary-value" id="seatsSelected">0</span>
+            </div>
+
+            <div id="selectedSeatsDisplay"></div>
+
+            <div class="price-breakdown" id="priceBreakdown" style="display: none;">
+                <div class="price-row">
+                    <span>Base Fare</span>
+                    <span id="baseFareText">₹0</span>
+                </div>
+                <div class="price-row total">
+                    <span>Total Amount</span>
+                    <span id="totalText">₹0</span>
+                </div>
+            </div>
+
+            <div class="total-price" id="totalPrice">₹0</div>
+
+            <button class="btn btn-primary" id="proceedPaymentBtn" style="display: none; width: 100%; margin-top: 10px;">
+                Proceed to Payment
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // State Management
+    const state = {
+        scheduleId: new URLSearchParams(window.location.search).get('scheduleId') || 1,
+        selectedSeats: [],
+        boardingPoint: null,
+        droppingPoint: null,
+        passengers: [],
+        currentStep: 1,
+        scheduleData: null,
+        seatData: null,
+        boardingPoints: [],
+        droppingPoints: [],
+        basePrice: 700,
+        whatsappEnabled: true
+    };
+
+    const API_BASE = '/api/v1';
+
+    function getJWT() {
+        return localStorage.getItem('jwt') || '';
+    }
+
+    async function fetchWithAuth(url, options = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getJWT()}`,
+            ...options.headers
+        };
+        return fetch(url, { ...options, headers });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadScheduleData();
+        setupEventListeners();
+        updateUI();
+    });
+
+    async function loadScheduleData() {
+        try {
+            const response = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}`);
+            if (!response.ok) throw new Error('Failed to load schedule');
+            state.scheduleData = await response.json();
+
+            document.getElementById('fromCity').textContent = state.scheduleData.startPoint;
+            document.getElementById('toCity').textContent = state.scheduleData.endPoint;
+            document.getElementById('busName').textContent = state.scheduleData.busNumber;
+            document.getElementById('journeyTime').textContent = `${state.scheduleData.startTime} - ${state.scheduleData.endTime}`;
+            document.getElementById('departure').textContent = state.scheduleData.startTime;
+
+            loadSchedulePoints();
+            await loadSeats();
+            updateSummary();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to load schedule data');
+        }
+    }
+
+    function loadSchedulePoints() {
+        if (!state.scheduleData?.points) return;
+
+        state.boardingPoints = state.scheduleData.points.filter(p => p.isBoardingPoint);
+        state.droppingPoints = state.scheduleData.points.filter(p => p.isDroppingPoint);
+
+        renderBoardingPoints();
+        renderDroppingPoints();
+    }
+
+    async function loadSeats() {
+        try {
+            // Try to fetch from API first
+             const response = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}/seats`);
+            if (response.ok) {
+                 state.seatData = await response.json();
+             } else {
+                state.seatData = generateMockSeats();
+             }
+            renderSeats();
+        } catch (error) {
+            console.error('Error loading seats:', error);
+            state.seatData = generateMockSeats();
+            renderSeats();
+        }
+    }
+
+    function generateMockSeats() {
+        const seats = [];
+        const decks = ['LOWER', 'UPPER'];
+        const types = ['SLEEPER', 'SLEEPER', 'SEAT'];
+        let id = 1;
+
+        decks.forEach(deck => {
+            for (let i = 1; i <= 12; i++) {
+                seats.push({
+                    seatId: id,
+                    seatNumber: `${deck === 'LOWER' ? 'L' : 'U'}${i}`,
+                    seatType: types[id % 3],
+                    deckType: deck,
+                    isAvailable: id % 4 !== 0,
+                    price: 700
+                });
+                id++;
+            }
+        });
+
+        return seats;
+    }
+
+    function renderSeats() {
+        const container = document.getElementById('seatContainer');
+        const decks = ['LOWER', 'UPPER'];
+
+        let html = '';
+
+        decks.forEach(deck => {
+            const deckSeats = state.seatData.filter(s => s.deckType === deck);
+            html += `
+                <div class="deck-section">
+                    <div class="deck-title">${deck} Deck</div>
+                    <div class="seats-grid">
+                        ${deckSeats.map(seat => `
+                            <div class="seat ${seat.available ? '' : 'sold'} ${state.selectedSeats.find(s => s.seatId === seat.seatId) ? 'selected' : ''}"
+                                 data-seat-id="${seat.seatId}"
+                                 data-seat-num="${seat.seatNumber}"
+                                 data-price="${seat.price}"
+                                 ${!seat.available ? 'data-disabled="true"' : ''}>
+                                ${seat.seatNumber}<br>₹${seat.price}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `
+            <div class="seat-legend">
+                <div class="legend-item">
+                    <div class="legend-box"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box selected"></div>
+                    <span>Selected</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box sold"></div>
+                    <span>Sold</span>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+        attachSeatListeners();
+    }
+
+    function attachSeatListeners() {
+        document.querySelectorAll('.seat:not([data-disabled])').forEach(seat => {
+            seat.addEventListener('click', () => {
+                const seatId = parseInt(seat.dataset.seatId);
+                const seatNumber = seat.dataset.seatNum;
+                const price = parseFloat(seat.dataset.price);
+
+                const existingIndex = state.selectedSeats.findIndex(s => s.seatId === seatId);
+
+                if (existingIndex > -1) {
+                    // Deselect
+                    state.selectedSeats.splice(existingIndex, 1);
+                    seat.classList.remove('selected');
+                } else {
+                    // Select
+                    state.selectedSeats.push({ seatId, seatNumber, price });
+                    seat.classList.add('selected');
+                }
+
+                updateSummary();
+                updateNextButton();
+            });
+        });
+    }
+
+    function renderBoardingPoints() {
+        const container = document.getElementById('boardingPointsList');
+        if (!state.boardingPoints || state.boardingPoints.length === 0) {
+            container.innerHTML = '<p style="color: #999;">No boarding points available</p>';
+            return;
+        }
+
+        container.innerHTML = state.boardingPoints.map((point, idx) => `
+            <div class="point-item" data-point-id="${point.id}" data-type="boarding">
+                <div class="point-radio"></div>
+                <div class="point-details">
+                    <div class="point-time">
+                        ${point.departureTime || point.arrivalTime}
+                        ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                    </div>
+                    <div class="point-name">${point.locationName}</div>
+                </div>
+            </div>
+        `).join('');
+
+        attachPointListeners('boarding');
+    }
+
+    function renderDroppingPoints() {
+        const container = document.getElementById('droppingPointsList');
+        if (!state.droppingPoints || state.droppingPoints.length === 0) {
+            container.innerHTML = '<p style="color: #999;">No dropping points available</p>';
+            return;
+        }
+
+        container.innerHTML = state.droppingPoints.map((point, idx) => `
+            <div class="point-item" data-point-id="${point.id}" data-type="dropping">
+                <div class="point-radio"></div>
+                <div class="point-details">
+                    <div class="point-time">
+                        ${point.arrivalTime || point.departureTime}
+                        ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                    </div>
+                    <div class="point-name">${point.locationName}</div>
+                </div>
+            </div>
+        `).join('');
+
+        attachPointListeners('dropping');
+    }
+
+    function attachPointListeners(type) {
+        const selector = `.point-item[data-type="${type}"]`;
+        document.querySelectorAll(selector).forEach(item => {
+            item.addEventListener('click', () => {
+                // Deselect all
+                document.querySelectorAll(selector).forEach(i => i.classList.remove('selected'));
+
+                // Select this one
+                item.classList.add('selected');
+
+                const pointId = item.dataset.pointId;
+                const points = type === 'boarding' ? state.boardingPoints : state.droppingPoints;
+                const selectedPoint = points.find(p => p.id == pointId);
+
+                if (type === 'boarding') {
+                    state.boardingPoint = selectedPoint;
+                } else {
+                    state.droppingPoint = selectedPoint;
+                }
+
+                updateNextButton();
+            });
+        });
+    }
+
+    function renderPassengerForms() {
+        const container = document.getElementById('passengersContainer');
+        const count = state.selectedSeats.length;
+
+        container.innerHTML = state.selectedSeats.map((seat, idx) => `
+            <div class="passenger-card">
+                <div class="passenger-header">
+                    <div class="passenger-title">
+                        <div class="passenger-icon">${idx + 1}</div>
+                        <span>Passenger ${idx + 1} - Seat ${seat.seatNumber}</span>
+                    </div>
+                </div>
+                <div class="passenger-content">
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input type="text" id="passenger-name-${idx}" placeholder="Enter full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Age *</label>
+                        <input type="number" id="passenger-age-${idx}" placeholder="Enter age" min="1" max="120" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender *</label>
+                        <div class="gender-options">
+                            <div class="gender-option" data-gender="MALE" data-idx="${idx}">
+                                <input type="radio" name="gender-${idx}" value="MALE" id="male-${idx}">
+                                <label for="male-${idx}">Male</label>
+                            </div>
+                            <div class="gender-option" data-gender="FEMALE" data-idx="${idx}">
+                                <input type="radio" name="gender-${idx}" value="FEMALE" id="female-${idx}">
+                                <label for="female-${idx}">Female</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Attach gender option listeners
+        document.querySelectorAll('.gender-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const idx = option.dataset.idx;
+                document.querySelectorAll(`.gender-option[data-idx="${idx}"]`).forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                option.querySelector('input').checked = true;
+            });
+        });
+    }
+
+    function updateSummary() {
+        const count = state.selectedSeats.length;
+        const total = state.selectedSeats.reduce((sum, s) => sum + s.price, 0);
+
+        document.getElementById('seatsSelected').textContent = count;
+        document.getElementById('totalPrice').textContent = `₹${total}`;
+
+        if (state.scheduleData) {
+            document.getElementById('summaryRoute').textContent =
+                `${state.scheduleData.startPoint} → ${state.scheduleData.endPoint}`;
+            document.getElementById('summaryDate').textContent =
+                new Date(state.scheduleData.journeyDate).toLocaleDateString();
+        }
+
+        if (count > 0) {
+            document.getElementById('priceBreakdown').style.display = 'block';
+            document.getElementById('baseFareText').textContent = `₹${total}`;
+            document.getElementById('totalText').textContent = `₹${total}`;
+
+            document.getElementById('selectedSeatsDisplay').innerHTML = `
+                <div class="selected-seats-display">
+                    <strong>Selected Seats:</strong><br>
+                    ${state.selectedSeats.map(s => `<span class="seat-badge">${s.seatNumber}</span>`).join(' ')}
+                </div>
+            `;
+        } else {
+            document.getElementById('priceBreakdown').style.display = 'none';
+            document.getElementById('selectedSeatsDisplay').innerHTML = '';
+        }
+    }
+
+    function setupEventListeners() {
+        // Next button
+        document.getElementById('nextBtn').addEventListener('click', handleNext);
+
+        // Previous button
+        document.getElementById('prevBtn').addEventListener('click', handlePrevious);
+
+        // WhatsApp toggle
+        document.getElementById('whatsappToggleContainer').addEventListener('click', () => {
+            const toggle = document.getElementById('whatsappToggle');
+            toggle.classList.toggle('active');
+            state.whatsappEnabled = toggle.classList.contains('active');
+        });
+
+        // Proceed to payment
+        document.getElementById('proceedPaymentBtn').addEventListener('click', handleBooking);
+    }
+
+    function handleNext() {
+        if (state.currentStep === 1) {
+            if (state.selectedSeats.length === 0) {
+                alert('Please select at least one seat');
+                return;
+            }
+            goToStep(2);
+        } else if (state.currentStep === 2) {
+            if (!state.boardingPoint || !state.droppingPoint) {
+                alert('Please select both boarding and dropping points');
+                return;
+            }
+            renderPassengerForms();
+            goToStep(3);
+        } else if (state.currentStep === 3) {
+            if (validatePassengerDetails()) {
+                collectPassengerData();
+                showPaymentButton();
+            }
+        }
+    }
+
+    function handlePrevious() {
+        if (state.currentStep > 1) {
+            goToStep(state.currentStep - 1);
+        }
+    }
+
+    function goToStep(step) {
+        // Update state
+        state.currentStep = step;
+
+        // Update stepper
+        document.querySelectorAll('.stepper-step').forEach(s => {
+            const stepNum = parseInt(s.dataset.step);
+            s.classList.remove('active', 'completed');
+
+            if (stepNum === step) {
+                s.classList.add('active');
+            } else if (stepNum < step) {
+                s.classList.add('completed');
+            }
+        });
+
+        // Update content
+        document.querySelectorAll('.step-content').forEach(c => {
+            c.classList.remove('active');
+        });
+        document.querySelector(`.step-content[data-step="${step}"]`).classList.add('active');
+
+        // Update buttons
+        document.getElementById('prevBtn').style.display = step > 1 ? 'block' : 'none';
+        document.getElementById('nextBtn').textContent = step === 3 ? 'Complete Booking' : 'Next →';
+
+        updateNextButton();
+    }
+
+    function updateNextButton() {
+        const btn = document.getElementById('nextBtn');
+
+        if (state.currentStep === 1) {
+            btn.disabled = state.selectedSeats.length === 0;
+        } else if (state.currentStep === 2) {
+            btn.disabled = !state.boardingPoint || !state.droppingPoint;
+        } else if (state.currentStep === 3) {
+            btn.disabled = false;
+        }
+    }
+
+    function validatePassengerDetails() {
+        const phone = document.getElementById('contactPhone').value.trim();
+        const email = document.getElementById('contactEmail').value.trim();
+        const state_residence = document.getElementById('stateOfResidence').value;
+
+        if (!phone || phone.length < 10) {
+            alert('Please enter a valid phone number');
+            return false;
+        }
+
+        if (!email || !email.includes('@')) {
+            alert('Please enter a valid email address');
+            return false;
+        }
+
+        if (!state_residence) {
+            alert('Please select your state of residence');
+            return false;
+        }
+
+        // Validate all passengers
+        for (let i = 0; i < state.selectedSeats.length; i++) {
+            const name = document.getElementById(`passenger-name-${i}`).value.trim();
+            const age = document.getElementById(`passenger-age-${i}`).value;
+            const gender = document.querySelector(`input[name="gender-${i}"]:checked`);
+
+            if (!name) {
+                alert(`Please enter name for Passenger ${i + 1}`);
+                return false;
+            }
+
+            if (!age || age < 1 || age > 120) {
+                alert(`Please enter valid age for Passenger ${i + 1}`);
+                return false;
+            }
+
+            if (!gender) {
+                alert(`Please select gender for Passenger ${i + 1}`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function collectPassengerData() {
+        state.passengers = [];
+
+        for (let i = 0; i < state.selectedSeats.length; i++) {
+            const name = document.getElementById(`passenger-name-${i}`).value.trim();
+            const age = parseInt(document.getElementById(`passenger-age-${i}`).value);
+            const gender = document.querySelector(`input[name="gender-${i}"]:checked`).value;
+
+            state.passengers.push({
+                seatId: state.selectedSeats[i].seatId,
+                passengerName: name,
+                passengerAge: age,
+                passengerGender: gender
+            });
+        }
+    }
+
+    function showPaymentButton() {
+        document.getElementById('proceedPaymentBtn').style.display = 'block';
+        document.getElementById('nextBtn').style.display = 'none';
+    }
+
+    async function handleBooking() {
+        const phone = document.getElementById('contactPhone').value.trim();
+        const email = document.getElementById('contactEmail').value.trim();
+
+        const bookingData = {
+            scheduleId: parseInt(state.scheduleId),
+            boardingPointId: state.boardingPoint.id,
+            droppingPointId: state.droppingPoint.id,
+            contactName: state.passengers[0].passengerName,
+            contactPhone: phone,
+            contactEmail: email,
+            seats: state.passengers
+        };
+
+        try {
+            document.getElementById('proceedPaymentBtn').disabled = true;
+            document.getElementById('proceedPaymentBtn').textContent = 'Processing...';
+
+            const response = await fetchWithAuth(`${API_BASE}/bookings`, {
+                method: 'POST',
+                body: JSON.stringify(bookingData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Booking failed');
+            }
+
+            const result = await response.json();
+
+            alert(`Booking successful! Booking ID: ${result.bookingId}`);
+
+            // Redirect to payment or success page
+            // window.location.href = `/payment?bookingId=${result.bookingId}`;
+
+        } catch (error) {
+            console.error('Booking error:', error);
+            alert('Booking failed. Please try again.');
+            document.getElementById('proceedPaymentBtn').disabled = false;
+            document.getElementById('proceedPaymentBtn').textContent = 'Proceed to Payment';
+        }
+    }
+
+    function updateUI() {
+        updateSummary();
+        updateNextButton();
+    }
+</script>
+</body>
+</html>

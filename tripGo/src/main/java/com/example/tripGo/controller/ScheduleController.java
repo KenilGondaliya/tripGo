@@ -44,6 +44,33 @@ public class ScheduleController {
         return scheduleService.search(date, null, null, p);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ScheduleResponseDto> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ScheduleRequestDto dto) {
+        ScheduleResponseDto updated = scheduleService.update(id, dto);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        scheduleService.delete(id);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ScheduleResponseDto> getById(@PathVariable Long id) {
+        ScheduleResponseDto schedule = scheduleService.findById(id);
+        return ResponseEntity.ok(schedule);
+    }
+
+    @GetMapping("/{scheduleId}/seats")
+    public ResponseEntity<List<SeatPriceResponseDto>> getSeatsWithPriceForSchedule(
+            @PathVariable Long scheduleId) {
+
+        return ResponseEntity.ok(scheduleService.getSeatsWithPriceForSchedule(scheduleId));
+    }
+
 //    @GetMapping("/{id}/seats")
 //    public List<SeatPriceResponseDto> getSeatMap(@PathVariable Long id) {
 //        return scheduleService.getSeatMap(id);

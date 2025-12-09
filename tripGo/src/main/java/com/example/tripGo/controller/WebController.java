@@ -32,6 +32,16 @@ public class WebController {
         return "routes";
     }
 
+    @GetMapping("/busticket")
+    public String busticket() {
+        return "busticket";
+    }
+
+    @GetMapping("/booking")
+    public String booking() {
+        return "booking";
+    }
+
     @GetMapping("/schedule")
     public String schedule() {
         return "schedule";

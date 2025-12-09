@@ -43,7 +43,7 @@ public class Schedule {
 
     private String totalTravelTime;
 
-    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<SchedulePoint> schedulePoints;
 
 //    // 🔁 One schedule can have many seat prices (for that day)
@@ -65,5 +65,16 @@ public class Schedule {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Helper methods to maintain bidirectional relationship
+    public void addSchedulePoint(SchedulePoint point) {
+        schedulePoints.add(point);
+        point.setSchedule(this);
+    }
+
+    public void removeSchedulePoint(SchedulePoint point) {
+        schedulePoints.remove(point);
+        point.setSchedule(null);
     }
 }

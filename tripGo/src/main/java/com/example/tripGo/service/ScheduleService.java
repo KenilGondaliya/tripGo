@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -107,4 +109,68 @@ public class ScheduleService {
 //                })
 //                .toList();
 //    }
+
+    public ScheduleResponseDto update(Long scheduleId, ScheduleRequestDto dto) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
+
+        Bus bus = busRepository.findById(dto.getBusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Bus not found"));
+        Route route = routeRepository.findById(dto.getRouteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Route not found"));
+
+        // Update fields
+        schedule.setBus(bus);
+        schedule.setRoute(route);
+        schedule.setJourneyDate(dto.getJourneyDate());
+        schedule.setStartTime(dto.getStartTime());
+        schedule.setEndTime(dto.getEndTime());
+        schedule.setTotalTravelTime(dto.getTotalTravelTime());
+
+        Schedule updated = scheduleRepository.save(schedule);
+        return toSummary(updated);
+    }
+
+    @Transactional
+    public void delete(Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
+
+        // This will automatically delete all SchedulePoints due to cascade + orphanRemoval
+        scheduleRepository.delete(schedule);
+    }
+
+    public ScheduleResponseDto findById(Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
+
+        return toSummary(schedule);
+    }
+
+    public List<SeatPriceResponseDto> getSeatsWithPriceForSchedule(Long scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found"));
+
+        Bus bus = schedule.getBus();
+        Route route = schedule.getRoute();
+
+        return seatRepository.findByBus(bus).stream()
+                .map(seat -> {
+                    BigDecimal price = seatPriceRepository
+                            .findByRouteAndSeat(route, seat)
+                            .map(SeatPrice::getPrice)
+                            .orElse(BigDecimal.valueOf(700)); // fallback price
+
+                    SeatPriceResponseDto dto = new SeatPriceResponseDto();
+                    dto.setSeatId(seat.getSeatId());
+                    dto.setSeatNumber(seat.getSeatNumber());
+                    dto.setSeatType(seat.getSeatType().toString());
+                    dto.setDeckType(seat.getDeckType().toString());
+                    dto.setAvailable(seat.isAvailable());
+                    dto.setPrice(price);
+                    return dto;
+                })
+                .sorted(Comparator.comparing(SeatPriceResponseDto::getSeatNumber))
+                .collect(Collectors.toList());
+    }
 }

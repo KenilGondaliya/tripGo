@@ -35,7 +35,5 @@ public class BookingSeat {
 
     @OneToOne(mappedBy = "bookingSeat", cascade = CascadeType.ALL, orphanRemoval = true)
     private Passenger passenger;
-
-
 }
 

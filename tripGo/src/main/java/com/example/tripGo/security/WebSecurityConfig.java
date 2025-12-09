@@ -48,7 +48,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
 //                        .requestMatchers("/api/v1/login").permitAll()
                         .requestMatchers("/api/v1/public/**").permitAll()
-                        .requestMatchers("/admin1", "/bus", "/routes", "/schedule").permitAll()
+                        .requestMatchers("/admin1", "/bus", "/routes", "/schedule", "/busticket", "/booking").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
