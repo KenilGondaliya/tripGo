@@ -13,30 +13,24 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BookingResponseDto {
+public class BookingDetailResponseDto {
     private Long bookingId;
     private String referenceNumber;
     private LocalDateTime bookingDate;
     private String status;
     private BigDecimal totalAmount;
 
-    // Schedule info
     private ScheduleInfoDto schedule;
-
-    // Points
     private PointInfoDto boardingPoint;
     private PointInfoDto droppingPoint;
 
-    // Contact info
     private String contactName;
     private String contactPhone;
     private String contactEmail;
 
-    // Seats and passengers
     private List<SeatPassengerDto> seats;
 
-    // Payment info if needed
     private String paymentStatus;
     private String paymentMode;
+    private String transactionId;
 }
-

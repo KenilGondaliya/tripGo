@@ -37,6 +37,21 @@ public class WebController {
         return "busticket";
     }
 
+    @GetMapping("/bookingdetails")
+    public String bookingdetails() {
+        return "bookingdetails";
+    }
+
+    @GetMapping("/bookingsuccess")
+    public String bookingsuccess() {
+        return "bookingsuccess";
+    }
+
+    @GetMapping("/mybooking")  // Note: hyphen, singular
+    public String mybooking() {
+        return "mybooking";
+    }
+
     @GetMapping("/booking")
     public String booking() {
         return "booking";

@@ -11,7 +11,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SchedulePointResponseDto {
-    private Long id;  // ← CHANGED from scheduleId
+    private Long id;  // ← This should be schedulePointId from entity
     private String locationName;
     private LocalTime arrivalTime;
     private LocalTime departureTime;

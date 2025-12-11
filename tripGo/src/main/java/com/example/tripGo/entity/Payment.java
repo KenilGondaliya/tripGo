@@ -22,7 +22,7 @@ public class Payment {
     private Long paymentId;
 
     @OneToOne
-    @JoinColumn(name = "booking_id")
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
     @Column(nullable = false, precision = 12, scale = 2)
@@ -34,5 +34,25 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
+    @Column
+    private String paymentMode;
+
+    @Column(unique = true)
+    private String transactionId;
+
+    @Column(nullable = false)
     private LocalDateTime paymentDate;
+
+    @Column
+    private String paymentGateway;
+
+    @Column
+    private String remarks;
+
+    @PrePersist
+    protected void onCreate() {
+        if (paymentDate == null) {
+            paymentDate = LocalDateTime.now();
+        }
+    }
 }

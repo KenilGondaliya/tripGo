@@ -45,10 +45,37 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessionConfig  -> sessionConfig .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/signup", "/auth/**", "/oauth2/**", "/webjars/**", "/images/**", "/css/**").permitAll()
-//                        .requestMatchers("/api/v1/login").permitAll()
-                        .requestMatchers("/api/v1/public/**").permitAll()
-                        .requestMatchers("/admin1", "/bus", "/routes", "/schedule", "/busticket", "/booking").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/signup",
+                                "/auth/**",
+                                "/oauth2/**",
+                                "/webjars/**",
+                                "/images/**",
+                                "/css/**",
+                                "/js/**",
+                                "/*.html",
+                                "/*.css",
+                                "/*.js",
+                                "/favicon.ico"
+                        ).permitAll()
+
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers(
+                                "/admin1",
+                                "/bus",
+                                "/routes",
+                                "/schedule",
+                                "/busticket",
+                                "/booking",
+                                "/mybooking",
+                                "/bookingsuccess",
+                                "/bookingdetails",
+                                "/mybooking"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/bookings/**").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

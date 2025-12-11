@@ -923,196 +923,187 @@
     async function loadScheduleData() {
         try {
             const response = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}`);
-            if (!response.ok) throw new Error('Failed to load schedule');
+            if (!response.ok) {
+                throw new Error('Failed to load schedule');
+            }
             state.scheduleData = await response.json();
 
-            // Debug: Check if points have IDs
-            console.log('Schedule data points:', state.scheduleData.points);
-            if (state.scheduleData.points) {
-                state.scheduleData.points.forEach((point, index) => {
-                    console.log(`Point ${index}:`, {
-                        id: point.id,
-                        locationName: point.locationName,
-                        hasId: point.id !== null && point.id !== undefined
-                    });
-                });
-            }
-
+            // Update UI with schedule data
             document.getElementById('fromCity').textContent = state.scheduleData.startPoint;
             document.getElementById('toCity').textContent = state.scheduleData.endPoint;
-            document.getElementById('busName').textContent = state.scheduleData.busNumber;
+            document.getElementById('busName').textContent = state.scheduleData.busNumber || 'Not specified';
             document.getElementById('journeyTime').textContent = `${state.scheduleData.startTime} - ${state.scheduleData.endTime}`;
             document.getElementById('departure').textContent = state.scheduleData.startTime;
 
-            loadSchedulePoints();
+            // Load schedule points
+            await loadSchedulePoints();
+
+            // Load available seats
             await loadSeats();
+
+            // Update summary
             updateSummary();
 
         } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to load schedule data');
+            console.error('Error loading schedule data:', error);
+            alert('Failed to load schedule data. Please try again.');
         }
     }
 
-    // Add this missing function
-    function loadSchedulePoints() {
-        if (!state.scheduleData?.points) {
-            console.log('No points in schedule data');
-            state.boardingPoints = [];
-            state.droppingPoints = [];
-            renderBoardingPoints();
-            renderDroppingPoints();
-            updateNextButton();
+   async function loadSchedulePoints() {
+    try {
+        // Make separate API calls for boarding and dropping points
+        const boardingResponse = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}/points/boarding`);
+        const droppingResponse = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}/points/dropping`);
+
+        if (boardingResponse.ok) {
+            state.boardingPoints = await boardingResponse.json();
+            console.log('Boarding points:', state.boardingPoints);
+        }
+
+        if (droppingResponse.ok) {
+            state.droppingPoints = await droppingResponse.json();
+            console.log('Dropping points:', state.droppingPoints);
+        }
+
+        // If either request fails, use mock data
+        if (!boardingResponse.ok || !droppingResponse.ok) {
+            throw new Error('Failed to load points');
+        }
+    } catch (error) {
+        console.error('Error loading points:', error);
+        // Create mock points for testing
+        createMockPoints();
+    }
+
+    renderBoardingPoints();
+    renderDroppingPoints();
+    updateNextButton();
+}
+
+    function createMockPoints() {
+        // Mock boarding points
+        state.boardingPoints = [
+            { id: 1, locationName: 'Jakatnaka', departureTime: '22:45:00', isBoardingPoint: true },
+            { id: 2, locationName: 'Surat Railway Station', departureTime: '23:00:00', isBoardingPoint: true },
+            { id: 3, locationName: 'Surat Bus Station', departureTime: '23:15:00', isBoardingPoint: true }
+        ];
+
+        // Mock dropping points
+        state.droppingPoints = [
+            { id: 4, locationName: 'Bapunagar', arrivalTime: '03:45:00', isDroppingPoint: true },
+            { id: 5, locationName: 'Ahmedabad Railway Station', arrivalTime: '04:00:00', isDroppingPoint: true },
+            { id: 6, locationName: 'Ahmedabad Bus Station', arrivalTime: '04:15:00', isDroppingPoint: true }
+        ];
+    }
+
+    async function loadSeats() {
+        try {
+            const response = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}/seats`);
+            if (response.ok) {
+                state.seatData = await response.json();
+                console.log('Seat data loaded:', state.seatData);
+
+                // Mark booked seats
+                await markBookedSeats();
+            } else {
+                console.log('Using mock seat data');
+                state.seatData = generateMockSeats();
+            }
+        } catch (error) {
+            console.error('Error loading seats:', error);
+            state.seatData = generateMockSeats();
+        }
+
+        renderSeats();
+    }
+
+    async function markBookedSeats() {
+        try {
+            const response = await fetch(`/api/v1/public/bookings/schedule/${state.scheduleId}/booked-seats`);
+            if (response.ok) {
+                const bookedSeats = await response.json();
+
+                // Mark booked seats as unavailable
+                state.seatData = state.seatData.map(seat => {
+                    const isBooked = bookedSeats.some(booked =>
+                        booked.seatId === seat.seatId ||
+                        booked.seatNumber === seat.seatNumber
+                    );
+                    return {
+                        ...seat,
+                        available: !isBooked
+                    };
+                });
+            }
+        } catch (error) {
+            console.error('Error marking booked seats:', error);
+        }
+    }
+
+    function generateMockSeats() {
+        const seats = [];
+        const decks = ['LOWER', 'UPPER'];
+        const types = ['SLEEPER', 'SLEEPER', 'SEAT'];
+        let id = 1;
+
+        decks.forEach(deck => {
+            for (let i = 1; i <= 12; i++) {
+                seats.push({
+                    seatId: id,
+                    seatNumber: `${deck === 'LOWER' ? 'L' : 'U'}${i}`,
+                    seatType: types[id % 3],
+                    deckType: deck,
+                    available: id % 4 !== 0,
+                    price: 700
+                });
+                id++;
+            }
+        });
+
+        return seats;
+    }
+
+    function renderSeats() {
+        const container = document.getElementById('seatContainer');
+
+        if (!state.seatData || state.seatData.length === 0) {
+            container.innerHTML = '<div class="loading"><p>No seats available for this schedule.</p></div>';
             return;
         }
 
-        state.boardingPoints = state.scheduleData.points.filter(p => p.isBoardingPoint);
-        state.droppingPoints = state.scheduleData.points.filter(p => p.isDroppingPoint);
+        const decks = ['LOWER', 'UPPER'];
+        let html = '';
+        let availableSeatsCount = 0;
 
-        console.log('Loaded boarding points:', state.boardingPoints);
-        console.log('Loaded dropping points:', state.droppingPoints);
+        decks.forEach(deck => {
+            const deckSeats = state.seatData.filter(s => s.deckType === deck);
+            if (deckSeats.length === 0) return;
 
-        renderBoardingPoints();
-        renderDroppingPoints();
+            const availableInDeck = deckSeats.filter(s => s.available).length;
+            availableSeatsCount += availableInDeck;
 
-        // Auto-select first point if only one exists
-        if (state.boardingPoints.length === 1) {
-            state.boardingPoint = state.boardingPoints[0];
-        }
-        if (state.droppingPoints.length === 1) {
-            state.droppingPoint = state.droppingPoints[0];
-        }
-
-        updateNextButton();
-    }
-
-   async function loadSeats() {
-    try {
-        // Try to fetch from API first
-        const response = await fetchWithAuth(`/api/v1/admin/schedules/${state.scheduleId}/seats`);
-        if (response.ok) {
-            state.seatData = await response.json();
-            console.log('Seat data from API:', state.seatData);
-
-            // Fetch booked seats for this schedule
-            await fetchAndMarkBookedSeats();
-
-        } else {
-            console.log('API failed, using mock data');
-            state.seatData = generateMockSeats();
-        }
-        renderSeats();
-    } catch (error) {
-        console.error('Error loading seats:', error);
-        state.seatData = generateMockSeats();
-        renderSeats();
-    }
-}
-
-
-async function fetchAndMarkBookedSeats() {
-    try {
-        // Call your booking API to get booked seats for this schedule
-        const response = await fetchWithAuth(`/api/v1/public/bookings/schedule/${state.scheduleId}/booked-seats`);
-        if (response.ok) {
-            const bookedSeats = await response.json();
-            console.log('Booked seats:', bookedSeats);
-
-            // Mark booked seats as unavailable
-            state.seatData = state.seatData.map(seat => {
-                const isBooked = bookedSeats.some(bookedSeat =>
-                    bookedSeat.seatId === seat.seatId ||
-                    bookedSeat.seatNumber === seat.seatNumber
-                );
-                return {
-                    ...seat,
-                    available: !isBooked  // Mark as not available if booked
-                };
-            });
-        }
-    } catch (error) {
-        console.error('Error fetching booked seats:', error);
-        // Continue with original seat data
-    }
-}
-
-   function generateMockSeats() {
-    const seats = [];
-    const decks = ['LOWER', 'UPPER'];
-    const types = ['SLEEPER', 'SLEEPER', 'SEAT'];
-    let id = 1;
-
-    decks.forEach(deck => {
-        for (let i = 1; i <= 12; i++) {
-            seats.push({
-                seatId: id,
-                seatNumber: `${deck === 'LOWER' ? 'L' : 'U'}${i}`,
-                seatType: types[id % 3],
-                deckType: deck,
-                available: id % 4 !== 0,  // Changed from isAvailable to available
-                price: 700
-            });
-            id++;
-        }
-    });
-
-    return seats;
-}
-
-    function renderSeats() {
-    const container = document.getElementById('seatContainer');
-
-    // Check if seatData exists
-    if (!state.seatData || state.seatData.length === 0) {
-        container.innerHTML = '<div class="loading"><p>No seats available for this schedule.</p></div>';
-        return;
-    }
-
-    // Debug: Check what properties the seats have
-    console.log('First seat in renderSeats:', state.seatData[0]);
-    console.log('Available property value:', state.seatData[0].available);
-
-    const decks = ['LOWER', 'UPPER'];
-    let html = '';
-    let availableSeatsCount = 0;
-    let totalSeatsCount = 0;
-
-    decks.forEach(deck => {
-        const deckSeats = state.seatData.filter(s => s.deckType === deck);
-        if (deckSeats.length === 0) return;
-
-        totalSeatsCount += deckSeats.length;
-
-        html += `
-            <div class="deck-section">
-                <div class="deck-title">${deck} Deck</div>
-                <div class="seats-grid">
-                    ${deckSeats.map(seat => {
-                        // Use the 'available' property from backend
-                        const isAvailable = seat.available;
-
-                        if (isAvailable) availableSeatsCount++;
-
-                        return `
-                            <div class="seat ${isAvailable ? '' : 'sold'} ${state.selectedSeats.find(s => s.seatId === seat.seatId) ? 'selected' : ''}"
-                                 data-seat-id="${seat.seatId}"
-                                 data-seat-num="${seat.seatNumber}"
-                                 data-price="${seat.price}"
-                                 ${!isAvailable ? 'data-disabled="true"' : ''}>
-                                ${seat.seatNumber}<br>₹${seat.price}
-                            </div>
-                        `;
-                    }).join('')}
+            html += `
+                <div class="deck-section">
+                    <div class="deck-title">${deck} Deck (${availableInDeck} available)</div>
+                    <div class="seats-grid">
+                        ${deckSeats.map(seat => {
+                            const isSelected = state.selectedSeats.some(s => s.seatId === seat.seatId);
+                            return `
+                                <div class="seat ${seat.available ? '' : 'sold'} ${isSelected ? 'selected' : ''}"
+                                     data-seat-id="${seat.seatId}"
+                                     data-seat-num="${seat.seatNumber}"
+                                     data-price="${seat.price}"
+                                     ${!seat.available ? 'data-disabled="true"' : ''}>
+                                    ${seat.seatNumber}<br>₹${seat.price}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
 
-    console.log(`Total seats: ${totalSeatsCount}, Available: ${availableSeatsCount}`);
-
-    if (html === '') {
-        html = '<div class="loading"><p>No seats configured for this bus.</p></div>';
-    } else {
         html += `
             <div class="seat-legend">
                 <div class="legend-item">
@@ -1125,103 +1116,107 @@ async function fetchAndMarkBookedSeats() {
                 </div>
                 <div class="legend-item">
                     <div class="legend-box sold"></div>
-                    <span>Sold (${totalSeatsCount - availableSeatsCount})</span>
+                    <span>Sold</span>
                 </div>
             </div>
         `;
+
+        container.innerHTML = html;
+        attachSeatListeners();
     }
 
-    container.innerHTML = html;
-    attachSeatListeners();
-}
-
-
-
     function attachSeatListeners() {
-    document.querySelectorAll('.seat:not(.sold):not([data-disabled])').forEach(seat => {
-        seat.addEventListener('click', () => {
-            const seatId = parseInt(seat.dataset.seatId);
-            const seatNumber = seat.dataset.seatNum;
-            const price = parseFloat(seat.dataset.price);
+        document.querySelectorAll('.seat:not(.sold):not([data-disabled])').forEach(seat => {
+            seat.addEventListener('click', () => {
+                const seatId = parseInt(seat.dataset.seatId);
+                const seatNumber = seat.dataset.seatNum;
+                const price = parseFloat(seat.dataset.price);
 
-            const existingIndex = state.selectedSeats.findIndex(s => s.seatId === seatId);
+                const existingIndex = state.selectedSeats.findIndex(s => s.seatId === seatId);
 
-            if (existingIndex > -1) {
-                // Deselect
-                state.selectedSeats.splice(existingIndex, 1);
-                seat.classList.remove('selected');
-            } else {
-                // Select
-                state.selectedSeats.push({ seatId, seatNumber, price });
-                seat.classList.add('selected');
-            }
+                if (existingIndex > -1) {
+                    // Deselect seat
+                    state.selectedSeats.splice(existingIndex, 1);
+                    seat.classList.remove('selected');
+                } else {
+                    // Check if we can select more seats
+                    if (state.selectedSeats.length >= 6) {
+                        alert('You can select maximum 6 seats per booking');
+                        return;
+                    }
 
-            updateSummary();
-            updateNextButton();
+                    // Select seat
+                    state.selectedSeats.push({
+                        seatId,
+                        seatNumber,
+                        price,
+                        passengerName: '',
+                        passengerAge: '',
+                        passengerGender: ''
+                    });
+                    seat.classList.add('selected');
+                }
+
+                updateSummary();
+                updateNextButton();
+            });
         });
-    });
-}
+    }
 
     function renderBoardingPoints() {
         const container = document.getElementById('boardingPointsList');
+
         if (!state.boardingPoints || state.boardingPoints.length === 0) {
-            container.innerHTML = '<p style="color: #999; text-align: center;">No boarding points</p>';
+            container.innerHTML = '<p style="color: #999; text-align: center;">No boarding points available</p>';
             return;
         }
 
-        const currentIndex = state.boardingPoint ?
-            state.boardingPoints.findIndex(p =>
-                p.locationName === state.boardingPoint.locationName &&
-                p.departureTime === state.boardingPoint.departureTime
-            ) : -1;
-
         container.innerHTML = state.boardingPoints.map((point, idx) => {
+            const isSelected = state.boardingPoint && state.boardingPoint.id === point.id;
             return `
-            <div class="point-item ${currentIndex === idx ? 'selected' : ''}"
-                 data-point-index="${idx}"
-                 data-type="boarding">
-                <div class="point-radio"></div>
-                <div class="point-details">
-                    <div class="point-time">
-                        ${point.departureTime || point.arrivalTime || ''}
-                        ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                <div class="point-item ${isSelected ? 'selected' : ''}"
+                     data-point-id="${point.id}"
+                     data-type="boarding">
+                    <div class="point-radio"></div>
+                    <div class="point-details">
+                        <div class="point-time">
+                            ${formatTime(point.departureTime || point.arrivalTime)}
+                            ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                        </div>
+                        <div class="point-name">${point.locationName || 'Unknown Location'}</div>
                     </div>
-                    <div class="point-name">${point.locationName || 'Unknown Location'}</div>
                 </div>
-            </div>
-        `}).join('');
+            `;
+        }).join('');
 
         attachPointListeners('boarding');
     }
 
     function renderDroppingPoints() {
         const container = document.getElementById('droppingPointsList');
+
         if (!state.droppingPoints || state.droppingPoints.length === 0) {
-            container.innerHTML = '<p style="color: #999; text-align: center;">No dropping points</p>';
+            container.innerHTML = '<p style="color: #999; text-align: center;">No dropping points available</p>';
             return;
         }
 
-        const currentIndex = state.droppingPoint ?
-            state.droppingPoints.findIndex(p =>
-                p.locationName === state.droppingPoint.locationName &&
-                p.arrivalTime === state.droppingPoint.arrivalTime
-            ) : -1;
-
         container.innerHTML = state.droppingPoints.map((point, idx) => {
+            const isSelected = state.droppingPoint && state.droppingPoint.id === point.id;
             return `
-            <div class="point-item ${currentIndex === idx ? 'selected' : ''}"
-                 data-point-index="${idx}"
-                 data-type="dropping">
-                <div class="point-radio"></div>
-                <div class="point-details">
-                    <div class="point-time">
-                        ${point.arrivalTime || point.departureTime || ''}
-                        ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                <div class="point-item ${isSelected ? 'selected' : ''}"
+                     data-point-id="${point.id}"
+                     data-type="dropping">
+                    <div class="point-radio"></div>
+                    <div class="point-details">
+                        <div class="point-time">
+                            ${formatTime(point.arrivalTime || point.departureTime)}
+                            ${idx === 0 ? '<span class="popular-badge">Popular</span>' : ''}
+                        </div>
+                        <div class="point-name">${point.locationName || 'Unknown Location'}</div>
                     </div>
-                    <div class="point-name">${point.locationName || 'Unknown Location'}</div>
                 </div>
-            </div>
-        `}).join('');
+            `;
+        }).join('');
 
         attachPointListeners('dropping');
     }
@@ -1230,31 +1225,24 @@ async function fetchAndMarkBookedSeats() {
         const selector = `.point-item[data-type="${type}"]`;
         document.querySelectorAll(selector).forEach(item => {
             item.addEventListener('click', () => {
-                console.log('Point clicked - Type:', type, 'Data:', item.dataset);
-
-                // Remove previous selection
-                document.querySelectorAll(selector).forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-
-                const pointIndex = parseInt(item.dataset.pointIndex);
-                console.log('Selected point index:', pointIndex);
-
+                const pointId = parseInt(item.dataset.pointId);
                 const points = type === 'boarding' ? state.boardingPoints : state.droppingPoints;
-
-                const selectedPoint = points[pointIndex];
-                console.log('Found point:', selectedPoint);
+                const selectedPoint = points.find(p => p.id === pointId);
 
                 if (!selectedPoint) {
-                    console.error('Point not found at index:', pointIndex, 'Points available:', points);
+                    console.error('Point not found with ID:', pointId);
                     return;
                 }
 
+                // Update selection
+                document.querySelectorAll(selector).forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+
+                // Update state
                 if (type === 'boarding') {
                     state.boardingPoint = selectedPoint;
-                    console.log('Boarding point set:', state.boardingPoint);
                 } else {
                     state.droppingPoint = selectedPoint;
-                    console.log('Dropping point set:', state.droppingPoint);
                 }
 
                 updateNextButton();
@@ -1262,49 +1250,80 @@ async function fetchAndMarkBookedSeats() {
         });
     }
 
+    function formatTime(timeString) {
+        if (!timeString) return '';
+        try {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        } catch (e) {
+            return timeString;
+        }
+    }
+
     function renderPassengerForms() {
         const container = document.getElementById('passengersContainer');
-        const count = state.selectedSeats.length;
 
-        container.innerHTML = state.selectedSeats.map((seat, idx) => `
-            <div class="passenger-card">
-                <div class="passenger-header">
-                    <div class="passenger-title">
-                        <div class="passenger-icon">${idx + 1}</div>
-                        <span>Passenger ${idx + 1} - Seat ${seat.seatNumber}</span>
+        container.innerHTML = state.selectedSeats.map((seat, idx) => {
+            // Pre-fill if passenger data exists
+            const passenger = state.passengers[idx] || {};
+
+            return `
+                <div class="passenger-card">
+                    <div class="passenger-header">
+                        <div class="passenger-title">
+                            <div class="passenger-icon">${idx + 1}</div>
+                            <span>Passenger ${idx + 1} - Seat ${seat.seatNumber}</span>
+                        </div>
                     </div>
-                </div>
-                <div class="passenger-content">
-                    <div class="form-group">
-                        <label>Name *</label>
-                        <input type="text" id="passenger-name-${idx}" placeholder="Enter full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Age *</label>
-                        <input type="number" id="passenger-age-${idx}" placeholder="Enter age" min="1" max="120" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Gender *</label>
-                        <div class="gender-options">
-                            <div class="gender-option" data-gender="MALE" data-idx="${idx}">
-                                <input type="radio" name="gender-${idx}" value="MALE" id="male-${idx}">
-                                <label for="male-${idx}">Male</label>
-                            </div>
-                            <div class="gender-option" data-gender="FEMALE" data-idx="${idx}">
-                                <input type="radio" name="gender-${idx}" value="FEMALE" id="female-${idx}">
-                                <label for="female-${idx}">Female</label>
+                    <div class="passenger-content">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="passenger-name-${idx}"
+                                   placeholder="Enter full name"
+                                   value="${passenger.passengerName || ''}"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>Age *</label>
+                            <input type="number" id="passenger-age-${idx}"
+                                   placeholder="Enter age"
+                                   min="1" max="120"
+                                   value="${passenger.passengerAge || ''}"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender *</label>
+                            <div class="gender-options">
+                                <div class="gender-option ${passenger.passengerGender === 'MALE' ? 'selected' : ''}"
+                                     data-gender="MALE" data-idx="${idx}">
+                                    <input type="radio" name="gender-${idx}"
+                                           value="MALE" id="male-${idx}"
+                                           ${passenger.passengerGender === 'MALE' ? 'checked' : ''}>
+                                    <label for="male-${idx}">Male</label>
+                                </div>
+                                <div class="gender-option ${passenger.passengerGender === 'FEMALE' ? 'selected' : ''}"
+                                     data-gender="FEMALE" data-idx="${idx}">
+                                    <input type="radio" name="gender-${idx}"
+                                           value="FEMALE" id="female-${idx}"
+                                           ${passenger.passengerGender === 'FEMALE' ? 'checked' : ''}>
+                                    <label for="female-${idx}">Female</label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Attach gender option listeners
         document.querySelectorAll('.gender-option').forEach(option => {
             option.addEventListener('click', () => {
                 const idx = option.dataset.idx;
-                document.querySelectorAll(`.gender-option[data-idx="${idx}"]`).forEach(o => o.classList.remove('selected'));
+                document.querySelectorAll(`.gender-option[data-idx="${idx}"]`).forEach(o =>
+                    o.classList.remove('selected'));
                 option.classList.add('selected');
                 option.querySelector('input').checked = true;
             });
@@ -1330,16 +1349,21 @@ async function fetchAndMarkBookedSeats() {
             document.getElementById('baseFareText').textContent = `₹${total}`;
             document.getElementById('totalText').textContent = `₹${total}`;
 
+            const seatBadges = state.selectedSeats.map(s =>
+                `<span class="seat-badge">${s.seatNumber}</span>`).join(' ');
+
             document.getElementById('selectedSeatsDisplay').innerHTML = `
                 <div class="selected-seats-display">
                     <strong>Selected Seats:</strong><br>
-                    ${state.selectedSeats.map(s => `<span class="seat-badge">${s.seatNumber}</span>`).join(' ')}
+                    ${seatBadges}
                 </div>
             `;
         } else {
             document.getElementById('priceBreakdown').style.display = 'none';
             document.getElementById('selectedSeatsDisplay').innerHTML = '';
         }
+
+        updateNextButton();
     }
 
     function setupEventListeners() {
@@ -1361,26 +1385,17 @@ async function fetchAndMarkBookedSeats() {
     }
 
     function handleNext() {
-        console.log('handleNext called - Current step:', state.currentStep);
-
         if (state.currentStep === 1) {
             if (state.selectedSeats.length === 0) {
                 alert('Please select at least one seat');
                 return;
             }
-            console.log('Moving to step 2');
             goToStep(2);
         } else if (state.currentStep === 2) {
-            console.log('Checking points for step 2:', {
-                boarding: state.boardingPoint,
-                dropping: state.droppingPoint
-            });
-
             if (!state.boardingPoint || !state.droppingPoint) {
                 alert('Please select both boarding and dropping points');
                 return;
             }
-            console.log('Moving to step 3');
             renderPassengerForms();
             goToStep(3);
         } else if (state.currentStep === 3) {
@@ -1424,32 +1439,16 @@ async function fetchAndMarkBookedSeats() {
         document.getElementById('nextBtn').textContent = step === 3 ? 'Complete Booking' : 'Next →';
 
         updateNextButton();
-
-        if (step === 2) {
-            setTimeout(() => {
-                updateNextButton();
-            }, 100);
-        }
     }
 
     function updateNextButton() {
         const btn = document.getElementById('nextBtn');
-
-        console.log('updateNextButton - Step:', state.currentStep);
-        console.log('boardingPoint:', state.boardingPoint);
-        console.log('droppingPoint:', state.droppingPoint);
-
         let canProceed = false;
 
         if (state.currentStep === 1) {
             canProceed = state.selectedSeats.length > 0;
         } else if (state.currentStep === 2) {
             canProceed = !!(state.boardingPoint && state.droppingPoint);
-            console.log('Step 2 check:', {
-                hasBoarding: !!state.boardingPoint,
-                hasDropping: !!state.droppingPoint,
-                canProceed: canProceed
-            });
         } else if (state.currentStep === 3) {
             canProceed = true;
         }
@@ -1461,30 +1460,24 @@ async function fetchAndMarkBookedSeats() {
         } else {
             btn.textContent = 'Next →';
         }
-
-        console.log('Button disabled:', btn.disabled, 'Text:', btn.textContent);
     }
 
     function validatePassengerDetails() {
         const phone = document.getElementById('contactPhone').value.trim();
         const email = document.getElementById('contactEmail').value.trim();
-        const state_residence = document.getElementById('stateOfResidence').value;
 
-        if (!phone || phone.length < 10) {
-            alert('Please enter a valid phone number');
+        // Validate contact details
+        if (!phone || !/^\d{10}$/.test(phone)) {
+            alert('Please enter a valid 10-digit phone number');
             return false;
         }
 
-        if (!email || !email.includes('@')) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             alert('Please enter a valid email address');
             return false;
         }
 
-        if (!state_residence) {
-            alert('Please select your state of residence');
-            return false;
-        }
-
+        // Validate passenger details
         for (let i = 0; i < state.selectedSeats.length; i++) {
             const name = document.getElementById(`passenger-name-${i}`).value.trim();
             const age = document.getElementById(`passenger-age-${i}`).value;
@@ -1496,7 +1489,7 @@ async function fetchAndMarkBookedSeats() {
             }
 
             if (!age || age < 1 || age > 120) {
-                alert(`Please enter valid age for Passenger ${i + 1}`);
+                alert(`Please enter valid age (1-120) for Passenger ${i + 1}`);
                 return false;
             }
 
@@ -1523,6 +1516,11 @@ async function fetchAndMarkBookedSeats() {
                 passengerAge: age,
                 passengerGender: gender
             });
+
+            // Update seat object with passenger data
+            state.selectedSeats[i].passengerName = name;
+            state.selectedSeats[i].passengerAge = age;
+            state.selectedSeats[i].passengerGender = gender;
         }
     }
 
@@ -1534,71 +1532,58 @@ async function fetchAndMarkBookedSeats() {
     async function handleBooking() {
         const phone = document.getElementById('contactPhone').value.trim();
         const email = document.getElementById('contactEmail').value.trim();
+        const contactName = state.passengers[0]?.passengerName || 'Customer';
 
-        const scheduleId = parseInt(state.scheduleId);
-        if (!scheduleId || isNaN(scheduleId)) {
-            alert('Invalid schedule ID. Please go back and try again.');
-            return;
-        }
-
-        if (!state.boardingPoint || !state.droppingPoint) {
-            alert('Boarding/Dropping point not selected properly.');
-            return;
-        }
-
-        console.log('Boarding point structure:', state.boardingPoint);
-        console.log('Dropping point structure:', state.droppingPoint);
-
-        const seatBookings = state.passengers.map(p => ({
-            seatId: p.seatId,
-            passengerName: p.passengerName,
-            passengerAge: p.passengerAge,
-            passengerGender: p.passengerGender
-        }));
-
+        // Prepare booking data
         const bookingData = {
-            scheduleId: scheduleId,
-            boardingPointId: state.boardingPoint.id || null,
-            droppingPointId: state.droppingPoint.id || null,
-            contactName: state.passengers[0]?.passengerName || 'Customer',
+            scheduleId: parseInt(state.scheduleId),
+            boardingPointId: state.boardingPoint.id,
+            droppingPointId: state.droppingPoint.id,
+            contactName: contactName,
             contactPhone: phone,
             contactEmail: email,
-            seats: seatBookings
+            seats: state.passengers
         };
 
-        console.log('Sending booking data:', bookingData);
+        console.log('Booking data:', bookingData);
 
         try {
-            document.getElementById('proceedPaymentBtn').disabled = true;
-            document.getElementById('proceedPaymentBtn').textContent = 'Processing...';
+            // Disable button and show loading
+            const proceedBtn = document.getElementById('proceedPaymentBtn');
+            proceedBtn.disabled = true;
+            proceedBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div> Processing...';
 
-            const response = await fetchWithAuth(`/api/v1/public/bookings`, {
+            // Submit booking
+            const response = await fetch(`/api/v1/public/bookings`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getJWT()}`
+                },
                 body: JSON.stringify(bookingData)
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Booking failed:', errorText);
-
-                if (errorText.includes('point') || errorText.includes('null')) {
-                    alert('Booking requires point IDs which are not available. Please contact support.');
-                    throw new Error('Point IDs not available');
-                }
-
-                throw new Error('Booking failed: ' + response.status);
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Booking failed');
             }
 
             const result = await response.json();
-            alert(`Booking successful! Booking ID: ${result.bookingId}`);
-            window.location.href = `/booking-success.html?bookingId=${result.bookingId}`;
+
+            // Show success message
+            alert(`Booking successful! Your booking ID: ${result.bookingId}`);
+
+            // Redirect to success page
+            window.location.href = `/api/v1/bookingsuccess.html?bookingId=${result.bookingId}`;
 
         } catch (error) {
             console.error('Booking error:', error);
-            alert('Booking failed. Please try again or contact support.');
-        } finally {
-            document.getElementById('proceedPaymentBtn').disabled = false;
-            document.getElementById('proceedPaymentBtn').textContent = 'Proceed to Payment';
+            alert(`Booking failed: ${error.message}`);
+
+            // Re-enable button
+            const proceedBtn = document.getElementById('proceedPaymentBtn');
+            proceedBtn.disabled = false;
+            proceedBtn.textContent = 'Proceed to Payment';
         }
     }
 

@@ -103,7 +103,7 @@ public class SchedulePointService {
 
     private SchedulePointResponseDto toResponseDto(SchedulePoint point) {
         SchedulePointResponseDto dto = new SchedulePointResponseDto();
-        dto.setId(point.getSchedulePointId());  // ← CHANGED from setScheduleId
+        dto.setId(point.getSchedulePointId());  // ← This is correct
         dto.setLocationName(point.getLocationName());
         dto.setArrivalTime(point.getArrivalTime());
         dto.setDepartureTime(point.getDepartureTime());

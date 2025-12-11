@@ -30,6 +30,7 @@ public class ScheduleService {
     private final RouteRepository routeRepository;
     private final SeatRepository seatRepository;
     private final RoutePointRepository routePointRepository;
+    private final BookingRepository bookingRepository;
     private final ModelMapper mapper;
 
     public ScheduleResponseDto create(ScheduleRequestDto dto) {
@@ -69,13 +70,14 @@ public class ScheduleService {
         dto.setEndTime(s.getEndTime());
         dto.setAvailableSeats(s.getBus().getTotalSeats());
 
-        // NEW: Direct from SchedulePoint (no RoutePoint!)
+        // FIXED: Direct from SchedulePoint with proper ID
         List<SchedulePointResponseDto> points = schedulePointRepository
                 .findBySchedule_ScheduleIdOrderByDepartureTimeAsc(s.getScheduleId())
                 .stream()
                 .map(p -> {
                     SchedulePointResponseDto pd = new SchedulePointResponseDto();
-                    pd.setLocationName(p.getLocationName());  // ← Direct!
+                    pd.setId(p.getSchedulePointId());  // ← THIS WAS MISSING!
+                    pd.setLocationName(p.getLocationName());
                     pd.setArrivalTime(p.getArrivalTime());
                     pd.setDepartureTime(p.getDepartureTime());
                     pd.setBoardingPoint(p.isBoardingPoint());
@@ -147,6 +149,7 @@ public class ScheduleService {
         return toSummary(schedule);
     }
 
+
     public List<SeatPriceResponseDto> getSeatsWithPriceForSchedule(Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule not found"));
@@ -154,20 +157,27 @@ public class ScheduleService {
         Bus bus = schedule.getBus();
         Route route = schedule.getRoute();
 
+        // Get all booked seat IDs for this schedule
+        List<Long> bookedSeatIds = bookingRepository.findBookedSeatIdsByScheduleId(scheduleId);
+
         return seatRepository.findByBus(bus).stream()
                 .map(seat -> {
                     BigDecimal price = seatPriceRepository
                             .findByRouteAndSeat(route, seat)
                             .map(SeatPrice::getPrice)
-                            .orElse(BigDecimal.valueOf(700)); // fallback price
+                            .orElse(BigDecimal.valueOf(700));
 
                     SeatPriceResponseDto dto = new SeatPriceResponseDto();
                     dto.setSeatId(seat.getSeatId());
                     dto.setSeatNumber(seat.getSeatNumber());
                     dto.setSeatType(seat.getSeatType().toString());
                     dto.setDeckType(seat.getDeckType().toString());
-                    dto.setAvailable(seat.isAvailable());
                     dto.setPrice(price);
+
+                    // Check if seat is already booked
+                    boolean isBooked = bookedSeatIds.contains(seat.getSeatId());
+                    dto.setAvailable(!isBooked);  // Available = not booked
+
                     return dto;
                 })
                 .sorted(Comparator.comparing(SeatPriceResponseDto::getSeatNumber))

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Details - TripGo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Add similar styles as my-bookings.html */
+        .details-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #e63946;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 50%;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="details-container">
+    <a href="/my-bookings.html" class="back-button">← Back to My Bookings</a>
+
+    <div id="bookingDetailsContent">
+        <!-- Booking details will be loaded here -->
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api/v1';
+
+    async function loadBookingDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookingId = urlParams.get('id');
+
+        if (!bookingId) {
+            window.location.href = '/api/v1/mybookings';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/public/bookings/${bookingId}/details`, {
+                headers: {
+                    'Authorization': `Bearer ${getJWT()}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load booking details');
+            }
+
+            const booking = await response.json();
+            displayBookingDetails(booking);
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('bookingDetailsContent').innerHTML = `
+                <div class="error-message">
+                    <h3>Error Loading Booking</h3>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function displayBookingDetails(booking) {
+        const container = document.getElementById('bookingDetailsContent');
+
+        container.innerHTML = `
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800 mb-2">
+                            Booking #${booking.referenceNumber}
+                        </h1>
+                        <div class="flex items-center gap-4">
+                            <span class="px-3 py-1 rounded-full ${getStatusClass(booking.status)}">
+                                ${booking.status}
+                            </span>
+                            <span class="text-gray-600">
+                                Booked on ${new Date(booking.bookingDate).toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-red-600">
+                            ₹${booking.totalAmount}
+                        </div>
+                        <div class="text-gray-600 text-sm">Total Amount</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <!-- Journey Details -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Journey Details</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-sm text-gray-600">Route</div>
+                                <div class="font-semibold text-lg">
+                                    ${booking.schedule.startPoint} → ${booking.schedule.endPoint}
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="text-sm text-gray-600">Date</div>
+                                    <div class="font-semibold">${booking.schedule.journeyDate}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Departure</div>
+                                    <div class="font-semibold">${booking.schedule.startTime}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Bus</div>
+                                <div class="font-semibold">${booking.schedule.busNumber}</div>
+                                <div class="text-gray-600 text-sm">${booking.schedule.operatorName}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Points Information -->
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Boarding & Dropping</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-sm text-gray-600">Boarding Point</div>
+                                <div class="font-semibold">${booking.boardingPoint.locationName}</div>
+                                <div class="text-gray-600 text-sm">
+                                    Time: ${formatTime(booking.boardingPoint.departureTime)}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Dropping Point</div>
+                                <div class="font-semibold">${booking.droppingPoint.locationName}</div>
+                                <div class="text-gray-600 text-sm">
+                                    Time: ${formatTime(booking.droppingPoint.arrivalTime)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passengers -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Passengers</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-gray-700 font-semibold">Seat</th>
+                                    <th class="py-3 px-4 text-left text-gray-700 font-semibold">Passenger Name</th>
+                                    <th class="py-3 px-4 text-left text-gray-700 font-semibold">Age/Gender</th>
+                                    <th class="py-3 px-4 text-left text-gray-700 font-semibold">Fare</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${booking.seats.map(seat => `
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">
+                                            <span class="font-semibold">${seat.seatNumber}</span>
+                                        </td>
+                                        <td class="py-3 px-4">${seat.passengerName}</td>
+                                        <td class="py-3 px-4">
+                                            ${seat.passengerAge} yrs • ${seat.passengerGender}
+                                        </td>
+                                        <td class="py-3 px-4 font-semibold">₹${seat.price}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Contact & Payment -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Contact Information</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="text-sm text-gray-600">Name</div>
+                                <div class="font-semibold">${booking.contactName}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Phone</div>
+                                <div class="font-semibold">${booking.contactPhone}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Email</div>
+                                <div class="font-semibold">${booking.contactEmail}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Payment Information</h2>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="text-sm text-gray-600">Payment Status</div>
+                                <div class="font-semibold ${getPaymentStatusClass(booking.paymentStatus)}">
+                                    ${booking.paymentStatus}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600">Payment Mode</div>
+                                <div class="font-semibold">${booking.paymentMode || 'N/A'}</div>
+                            </div>
+                            ${booking.transactionId ? `
+                                <div>
+                                    <div class="text-sm text-gray-600">Transaction ID</div>
+                                    <div class="font-semibold text-sm">${booking.transactionId}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 pt-8 border-t flex justify-between">
+                    <button onclick="downloadReceipt(${booking.bookingId})"
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        📄 Download Ticket
+                    </button>
+                    ${booking.status === 'CONFIRMED' ? `
+                        <button onclick="cancelBooking(${booking.bookingId})"
+                                class="px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                            ✕ Cancel Booking
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function getStatusClass(status) {
+        const classes = {
+            'CONFIRMED': 'bg-green-100 text-green-800',
+            'PENDING': 'bg-yellow-100 text-yellow-800',
+            'CANCELLED': 'bg-red-100 text-red-800',
+            'COMPLETED': 'bg-blue-100 text-blue-800'
+        };
+        return classes[status] || 'bg-gray-100 text-gray-800';
+    }
+
+    function getPaymentStatusClass(status) {
+        const classes = {
+            'SUCCESS': 'text-green-600',
+            'PENDING': 'text-yellow-600',
+            'FAILED': 'text-red-600',
+            'REFUNDED': 'text-blue-600'
+        };
+        return classes[status] || 'text-gray-600';
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        const [hours, minutes] = timeStr.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
+    }
+
+    // Helper functions
+    function getJWT() {
+        return localStorage.getItem('jwt') || '';
+    }
+
+    async function downloadReceipt(bookingId) {
+        try {
+            const response = await fetch(`/api/v1/public/bookings/${bookingId}/receipt`, {
+                headers: {
+                    'Authorization': `Bearer ${getJWT()}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to download receipt');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `booking-${bookingId}-receipt.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            alert('Error downloading receipt: ' + error.message);
+        }
+    }
+
+    async function cancelBooking(bookingId) {
+        if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+        try {
+            const response = await fetch(`/api/v1/bookings/${bookingId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getJWT()}`
+                },
+                body: JSON.stringify({
+                    email: localStorage.getItem('userEmail') || ''
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to cancel booking');
+
+            const result = await response.json();
+            alert(`Booking cancelled. Refund amount: ₹${result.refundAmount}`);
+            loadBookingDetails(); // Refresh the page
+
+        } catch (error) {
+            alert('Error cancelling booking: ' + error.message);
+        }
+    }
+
+    // Load booking details on page load
+    document.addEventListener('DOMContentLoaded', loadBookingDetails);
+</script>
+</body>
+</html>

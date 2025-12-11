@@ -21,16 +21,19 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long bookingId;
 
-    @ManyToOne
-    @JoinColumn(name = "schedule_id")
+    @Column(unique = true, nullable = false)
+    private String referenceNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;  // Which schedule this booking is for
 
-    @ManyToOne
-    @JoinColumn(name = "boarding_point_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "boarding_point_id", nullable = false)
     private SchedulePoint boardingPoint;
 
-    @ManyToOne
-    @JoinColumn(name = "dropping_point_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dropping_point_id", nullable = false)
     private SchedulePoint droppingPoint;
 
     @Enumerated(EnumType.STRING)
@@ -53,14 +56,27 @@ public class Booking {
     private String contactEmail;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<BookingSeat> bookingSeats = new ArrayList<>();
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
-        this.bookingDate = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+
 }
