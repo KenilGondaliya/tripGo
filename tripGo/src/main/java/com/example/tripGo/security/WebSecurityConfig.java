@@ -72,7 +72,9 @@ public class WebSecurityConfig {
                                 "/mybooking",
                                 "/bookingsuccess",
                                 "/bookingdetails",
-                                "/mybooking"
+                                "/mybooking",
+                                "/adminbooking",
+                                "/customers"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/bookings/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/bookings/**").authenticated()

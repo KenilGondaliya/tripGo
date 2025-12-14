@@ -44,11 +44,12 @@
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: 900;
             color: #e63946;
             display: flex;
             align-items: center;
+            width:110px;
             gap: 8px;
         }
 
@@ -64,7 +65,7 @@
             align-items: center;
             gap: 4px;
             text-decoration: none;
-            color: #333;
+            color: #e63946;
             font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.3s ease;
@@ -85,21 +86,26 @@
             align-items: center;
         }
 
-        .help-btn, .account-btn {
+        .account-btn {
             display: flex;
             align-items: center;
             gap: 8px;
+            width: 110px;
+            height: 50px;
+            border-radius: 30px;
+            padding-8px;
+            justify-content:center;
             cursor: pointer;
             color: #333;
             font-weight: 500;
             font-size: 0.9rem;
             background: none;
             border: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        .help-btn:hover, .account-btn:hover {
-            color: #e63946;
+        .account-btn:hover {
+            background-color: #c7c7c7;
         }
 
         /* Hero Section */
@@ -272,7 +278,7 @@
 
         .date-option {
             padding: 8px 16px;
-            border: 2px solid #e5e7eb;
+            border: 2px solid #ffe5e8;
             border-radius: 20px;
             background: white;
             cursor: pointer;
@@ -285,7 +291,7 @@
         .date-option:hover,
         .date-option.active {
             background: #ffe5e8;
-            border-color: #e63946;
+            border-color: #ffe5e8;
             color: #e63946;
         }
 
@@ -331,8 +337,8 @@
             padding: 14px;
             border: none;
             border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
@@ -635,28 +641,22 @@
 <header>
     <div class="container">
         <div class="header-left">
-            <div class="logo">
-                <span style="font-size: 1.8rem;">🚌</span>
-                TripGo
+            <div  href="/api/v1" class="logo">
+                <img src="/api/v1/images/logo.png">
             </div>
             <nav class="nav-items">
-                <a href="#" class="nav-item">
-                    <span style="font-size: 1.5rem;">🎫</span>
+                <a href="/api/v1/buyticket" class="nav-item">
+                    <span style="font-size: 1.5rem;"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="20px" height="20px" viewBox="0 0 16 16" version="1.1" >
+<path fill="#e63946" color="#e63946" d="M14.67 4h-0.67v-2c0-1.105-0.895-2-2-2h-8c-1.105 0-2 0.895-2 2v2h-0.68c-0 0-0 0-0 0-0.177 0-0.32 0.143-0.32 0.32 0 0.004 0 0.007 0 0.011l-0 2.339c-0 0.003-0 0.006-0 0.010 0 0.177 0.143 0.32 0.32 0.32 0 0 0 0 0 0h0.68v6c0 0.55 0 1 1 1v1.5c0 0.276 0.224 0.5 0.5 0.5h2c0.276 0 0.5-0.224 0.5-0.5v-1.5h4v1.5c0 0.276 0.224 0.5 0.5 0.5h2c0.276 0 0.5-0.224 0.5-0.5v-1.5c1 0 1-0.45 1-1v-6h0.67c0.182 0 0.33-0.148 0.33-0.33s-0.148-0.33-0.33-0.33c-0.182 0-0.33 0.148-0.33 0.33s0.148 0.33 0.33 0.33c0.182 0 0.33-0.148 0.33-0.33v-2.34c0-0.182-0.148-0.33-0.33-0.33 0 0 0 0 0 0zM6 1h4v1h-4v-1zM4 12c-0.552 0-1-0.448-1-1s0.448-1 1-1c0.552 0 1 0.448 1 1s-0.448 1-1 1zM3 8v-5h10v5h-10zM12 12c-0.552 0-1-0.448-1-1s0.448-1 1-1c0.552 0 1 0.448 1 1s-0.448 1-1 1z"/>
+</svg></span>
                     <span>Bus tickets</span>
                 </a>
-                <a href="#" class="nav-item">
-                    <span style="font-size: 1.5rem;">🚆</span>
-                    <span>Train tickets</span>
-                </a>
+
             </nav>
         </div>
         <div class="header-right">
-            <button class="help-btn">
-                <span style="font-size: 1.2rem;">❓</span>
-                <span>Help</span>
-            </button>
             <button class="account-btn" id="openDrawerBtn">
-                <span style="font-size: 1.2rem;">👤</span>
+                <span style="font-size: 1.2rem;"><svg width="25px" height="25px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="0.00024000000000000003"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.43200000000000005"></g><g id="SVGRepo_iconCarrier"> <g> <path fill="none" d="M0 0h24v24H0z"></path> <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-4.987-3.744A7.966 7.966 0 0 0 12 20c1.97 0 3.773-.712 5.167-1.892A6.979 6.979 0 0 0 12.16 16a6.981 6.981 0 0 0-5.147 2.256zM5.616 16.82A8.975 8.975 0 0 1 12.16 14a8.972 8.972 0 0 1 6.362 2.634 8 8 0 1 0-12.906.187zM12 13a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path> </g> </g></svg></span>
                 <span>Account</span>
             </button>
         </div>
@@ -665,15 +665,17 @@
 
 <!-- Hero Section -->
 <section class="hero-section">
-    <div style="display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; z-index: 10;">
+    <div style="display: flex; flex-direction: column; align-items:center; width: 90%; position: relative; z-index: 10;">
         <div class="hero-content">
-            <h1>India's No. 1 online bus ticket booking site</h1>
+            <h1>India's No. 1 online </h1>
+            <h1>bus ticket booking site</h1>
         </div>
 
         <form class="search-card" id="searchForm">
             <div class="search-top">
                 <div class="input-group">
-                    <label for="fromInput">From</label>
+
+                    <label for="fromInput"> From</label>
                     <input type="text" id="fromInput" placeholder="Surat" required />
                     <div class="error-message" id="fromError">Please enter a departure city</div>
                 </div>
@@ -698,21 +700,12 @@
                     <button type="button" class="date-option active">Today</button>
                     <button type="button" class="date-option">Tomorrow</button>
                 </div>
-                <div class="women-booking">
-                    <input type="checkbox" id="womenBooking" />
-                    <label for="womenBooking">
-                        <span class="women-booking-text">👩 Booking for women</span>
-                        <a href="#" class="women-booking-link">Know more</a>
-                    </label>
-                </div>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" style="width: 20px; height: 20px;" />
-                    <span style="font-size: 1.2rem;">🌙</span>
-                </label>
             </div>
-
-            <button type="submit" class="search-btn">
-                <span>🔍</span>
+                <br/>
+            <button type="submit" class="search-btn" >
+                <span><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                <path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg></span>
                 <span>Search buses</span>
             </button>
         </form>
@@ -729,7 +722,7 @@
     <div class="offer-tabs">
         <button class="offer-tab active">All</button>
         <button class="offer-tab">Bus</button>
-        <button class="offer-tab">Train</button>
+
     </div>
 
     <div class="offers-grid">

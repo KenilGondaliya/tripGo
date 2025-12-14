@@ -67,7 +67,7 @@
 </head>
 <body>
 <div class="details-container">
-    <a href="/my-bookings.html" class="back-button">← Back to My Bookings</a>
+    <a href="/mybooking" class="back-button">← Back to My Bookings</a>
 
     <div id="bookingDetailsContent">
         <!-- Booking details will be loaded here -->
@@ -343,7 +343,7 @@
         if (!confirm('Are you sure you want to cancel this booking?')) return;
 
         try {
-            const response = await fetch(`/api/v1/bookings/${bookingId}/cancel`, {
+            const response = await fetch(`/api/v1/public/bookings/${bookingId}/cancel`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

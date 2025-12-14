@@ -40,6 +40,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private AuthProviderType providerType;
 
+    private boolean active = true;
+
+    private boolean enabled = true;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))

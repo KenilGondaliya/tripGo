@@ -52,6 +52,16 @@ public class WebController {
         return "mybooking";
     }
 
+    @GetMapping("/adminbooking")
+    public String adminbooking() {
+        return "adminbooking";
+    }
+
+    @GetMapping("/customers")
+    public String customers() {
+        return "customers";
+    }
+
     @GetMapping("/booking")
     public String booking() {
         return "booking";

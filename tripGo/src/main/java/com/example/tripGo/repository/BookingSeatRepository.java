@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingSeatRepository extends JpaRepository<BookingSeat, Long> {
@@ -15,4 +16,13 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Long> 
     @Query("SELECT bs FROM BookingSeat bs WHERE bs.booking.schedule.scheduleId = :scheduleId " +
             "AND bs.seatStatus = 'BOOKED'")
     List<BookingSeat> findBookedSeatsBySchedule(@Param("scheduleId") Long scheduleId);
+
+    @Query("SELECT COUNT(bs) FROM BookingSeat bs " +
+            "WHERE bs.booking.schedule.bus.busId = :busId " +
+            "AND bs.booking.bookingDate BETWEEN :startDate AND :endDate " +
+            "AND bs.booking.bookingStatus = 'CONFIRMED'")
+    Long countPassengersByBusAndDateRange(
+            @Param("busId") Long busId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 }
