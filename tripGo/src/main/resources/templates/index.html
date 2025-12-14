@@ -634,6 +634,73 @@
         .close-drawer:hover {
             color: #333;
         }
+
+        /* Update drawer panel styling */
+.drawer-panel {
+    position: fixed;
+    right: -400px;
+    top: 0;
+    height: 100vh;
+    width: 400px;
+    background: white;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
+    transition: right 0.3s ease;
+    z-index: 50;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f5f5f5;
+}
+
+.drawer-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.drawer-panel::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+.drawer-panel::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    border-radius: 10px;
+}
+
+.drawer-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.drawer-content {
+    padding: 0;
+}
+
+/* Toggle switch styling */
+.drawer-content input[type="checkbox"]:checked + span {
+    background-color: #10b981;
+}
+
+.drawer-content input[type="checkbox"]:checked + span:before {
+    transform: translateX(24px);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .drawer-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .drawer-header h2 {
+        font-size: 1.2rem;
+    }
+}
     </style>
 </head>
 <body>
@@ -820,37 +887,264 @@
     closeBtn.onclick = closeDrawer;
     overlay.onclick = closeDrawer;
 
-    function renderDrawer() {
-        const jwt = localStorage.getItem("jwt");
-        const username = localStorage.getItem("username") || "User";
+  // Add this function to fetch user info
+async function fetchUserInfo() {
+    const jwt = localStorage.getItem("jwt");
+    if (!jwt) {
+        return null;
+    }
 
-        if (jwt) {
-            content.innerHTML = `
-                <div style="text-align: center; padding: 20px 0;">
-                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 2rem; font-weight: bold;">
+    try {
+        const response = await fetch('/api/v1/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
+
+        if (response.ok) {
+            const userData = await response.json();
+            // Store user info in localStorage for future use
+            localStorage.setItem('userInfo', JSON.stringify(userData));
+
+            // Check if user has admin role
+            const isAdmin = userData.roles && userData.roles.some(role =>
+                role === 'ROLE_ADMIN' ||
+                role === 'ADMIN' ||
+                (typeof role === 'object' && (role.authority === 'ROLE_ADMIN' || role.name === 'ADMIN'))
+            );
+
+            localStorage.setItem('isAdmin', isAdmin);
+            return userData;
+        }
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+    }
+    return null;
+}
+
+// Update renderDrawer to use fetched user info
+async function renderDrawer() {
+    const jwt = localStorage.getItem("jwt");
+    const username = localStorage.getItem("username") || "User";
+
+    // Try to get user info from localStorage or fetch it
+    let userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    let isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+    // If no user info in localStorage but we have JWT, fetch it
+    if (jwt && !userInfo) {
+        userInfo = await fetchUserInfo();
+        if (userInfo) {
+            isAdmin = userInfo.roles && userInfo.roles.some(role =>
+                role === 'ROLE_ADMIN' ||
+                role === 'ADMIN' ||
+                (typeof role === 'object' && (role.authority === 'ROLE_ADMIN' || role.name === 'ADMIN'))
+            );
+        }
+    }
+
+    if (jwt) {
+        content.innerHTML = `
+            <div style="padding: 0;">
+                <!-- User Profile Section -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; color: white; display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
                         ${username.charAt(0).toUpperCase()}
                     </div>
-                    <p style="font-size: 1.3rem; font-weight: 600; color: #333; margin-bottom: 30px;">Hi, ${username}</p>
+                    <div>
+                        <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 5px;">${username}</p>
+                        <p style="font-size: 0.85rem; opacity: 0.9;">
+                            ${isAdmin ? 'Administrator' : 'Customer'}
+                        </p>
+                    </div>
+                </div>
 
-                    <button id="logoutBtn" style="width: 100%; padding: 12px; background: #e63946; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                <!-- Admin Dashboard Button (Only for Admins) -->
+                ${isAdmin ? `
+                    <div style="padding: 15px 20px 0 20px;">
+                        <a href="/api/v1/admin1" style="display: flex; align-items: center; gap: 15px; padding: 12px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 10px; text-decoration: none; color: white; transition: all 0.3s ease; font-weight: 600;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="width: 40px; height: 40px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                📊
+                            </div>
+                            <span style="font-size: 1rem;">Admin Dashboard</span>
+                            <span style="margin-left: auto; font-size: 0.8rem; background: rgba(255, 255, 255, 0.3); padding: 2px 8px; border-radius: 10px;">ADMIN</span>
+                        </a>
+                    </div>
+                ` : ''}
+
+                <!-- Main Navigation -->
+                <div style="padding: 20px;">
+                    <div style="margin-bottom: 25px;">
+                        <p style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Account</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <a href="/api/v1/profile" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #e63946; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    👤
+                                </div>
+                                <span style="font-size: 1rem;">My details</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <p style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Bookings</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <a href="/api/v1/my-bookings" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    🎫
+                                </div>
+                                <span style="font-size: 1rem;">Bookings</span>
+                            </a>
+                            <a href="/api/v1/personal-info" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    📄
+                                </div>
+                                <span style="font-size: 1rem;">Personal information</span>
+                            </a>
+                            <a href="/api/v1/payments" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #3b82f6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    💳
+                                </div>
+                                <span style="font-size: 1rem;">Payments</span>
+                            </a>
+                            <a href="/api/v1/wallet" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #8b5cf6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    💰
+                                </div>
+                                <span style="font-size: 1rem;">TripGo Wallet</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <p style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">More</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <a href="/api/v1/offers" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #ef4444; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    🎁
+                                </div>
+                                <span style="font-size: 1rem;">Offers</span>
+                            </a>
+                            <a href="/api/v1/about" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #14b8a6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    ℹ️
+                                </div>
+                                <span style="font-size: 1rem;">Know about TripGo</span>
+                            </a>
+                            <a href="/api/v1/help" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #f97316; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    ❓
+                                </div>
+                                <span style="font-size: 1rem;">Help</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <p style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Quick Actions</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <a href="/api/v1/cancel" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #dc2626; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    ❌
+                                </div>
+                                <span style="font-size: 1rem;">Cancel Ticket</span>
+                            </a>
+                            <a href="/api/v1/reschedule" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #059669; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    🔄
+                                </div>
+                                <span style="font-size: 1rem;">Reschedule ticket</span>
+                            </a>
+                            <a href="/api/v1/search" style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; text-decoration: none; color: #333; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+                                <div style="width: 40px; height: 40px; background: #2563eb; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    🔍
+                                </div>
+                                <span style="font-size: 1rem;">Search ticket</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <p style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Settings</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 10px; transition: all 0.3s ease;">
+                                <div style="width: 40px; height: 40px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                    🌐
+                                </div>
+                                <div style="flex: 1;">
+                                    <span style="font-size: 1rem;">Language</span>
+                                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                        <button style="padding: 5px 15px; background: #e63946; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">English</button>
+                                        <button style="padding: 5px 15px; background: #f5f5f5; color: #666; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; cursor: pointer;">हिन्दी</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 10px; transition: all 0.3s ease;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <div style="width: 40px; height: 40px; background: #8b5cf6; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                        🔔
+                                    </div>
+                                    <span style="font-size: 1rem;">Notifications</span>
+                                </div>
+                                <label style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                                    <input type="checkbox" style="opacity: 0; width: 0; height: 0;" checked />
+                                    <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e63946; border-radius: 34px; transition: .4s;"></span>
+                                    <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s;"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <button id="logoutBtn" style="width: 100%; padding: 14px; background: #e63946; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 20px;" onmouseover="this.style.backgroundColor='#d32f39'" onmouseout="this.style.backgroundColor='#e63946'">
                         Logout
                     </button>
                 </div>
-            `;
-            document.getElementById("logoutBtn").onclick = logout;
-        } else {
-            content.innerHTML = `
-                <div style="space-y: 15px;">
-                    <a href="/api/v1/login" style="display: block; width: 100%; background: #e63946; color: white; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-bottom: 10px; transition: all 0.3s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            </div>
+        `;
+        document.getElementById("logoutBtn").onclick = logout;
+    } else {
+        content.innerHTML = `
+            <div style="padding: 40px 20px; text-align: center;">
+                <div style="margin-bottom: 30px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <span style="font-size: 2rem; color: white; font-weight: bold;">?</span>
+                    </div>
+                    <h3 style="font-size: 1.3rem; font-weight: 600; color: #333; margin-bottom: 10px;">Welcome to TripGo</h3>
+                    <p style="color: #666; font-size: 0.95rem; margin-bottom: 30px;">Sign in to access your account and manage bookings</p>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <a href="/api/v1/login" style="display: block; width: 100%; background: #e63946; color: white; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                         Login
                     </a>
-                    <a href="/api/v1/signup" style="display: block; width: 100%; background: #10b981; color: white; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-bottom: 10px; transition: all 0.3s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <a href="/api/v1/signup" style="display: block; width: 100%; background: #10b981; color: white; text-align: center; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                         Signup
                     </a>
                 </div>
-            `;
-        }
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Quick actions for guests:</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                        <a href="/api/v1/offers" style="padding: 8px 16px; background: #f5f5f5; color: #333; border-radius: 20px; text-decoration: none; font-size: 0.9rem;">🎁 Offers</a>
+                        <a href="/api/v1/help" style="padding: 8px 16px; background: #f5f5f5; color: #333; border-radius: 20px; text-decoration: none; font-size: 0.9rem;">❓ Help</a>
+                        <a href="/api/v1/about" style="padding: 8px 16px; background: #f5f5f5; color: #333; border-radius: 20px; text-decoration: none; font-size: 0.9rem;">ℹ️ About</a>
+                    </div>
+                </div>
+            </div>
+        `;
     }
+}
+
+// Also update the initialization to fetch user info on page load
+document.addEventListener("DOMContentLoaded", async () => {
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
+        // Fetch user info when page loads if we have JWT
+        await fetchUserInfo();
+    }
+    renderDrawer();
+});
 
     function logout() {
         localStorage.clear();
