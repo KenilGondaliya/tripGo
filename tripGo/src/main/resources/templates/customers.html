@@ -1183,17 +1183,17 @@
                         <div class="text-sm text-gray-600">Total Bookings</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">₹${customer.totalSpent || 0}</div>
-                        <div class="text-sm text-gray-600">Total Spent</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-600">${customer.avgBookings || 0}</div>
-                        <div class="text-sm text-gray-600">Avg. Bookings</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-600">${customer.lastBooking || 'Never'}</div>
-                        <div class="text-sm text-gray-600">Last Booking</div>
-                    </div>
+            <div class="text-2xl font-bold text-green-600">₹${customer.totalRevenue || 0}</div>
+            <div class="text-sm text-gray-600">Total Revenue</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600">${customer.averageBookingValue ? `₹${customer.averageBookingValue.toFixed(2)}` : '₹0'}</div>
+            <div class="text-sm text-gray-600">Avg. Booking Value</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-yellow-600">${customer.lastBooking ? new Date(customer.lastBooking).toLocaleDateString() : 'Never'}</div>
+            <div class="text-sm text-gray-600">Last Booking</div>
+        </div>
                 </div>
             </div>
 
