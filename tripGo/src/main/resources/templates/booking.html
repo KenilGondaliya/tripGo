@@ -1434,13 +1434,6 @@
         // Previous button
         document.getElementById('prevBtn').addEventListener('click', handlePrevious);
 
-        // WhatsApp toggle
-        document.getElementById('whatsappToggleContainer').addEventListener('click', () => {
-            const toggle = document.getElementById('whatsappToggle');
-            toggle.classList.toggle('active');
-            state.whatsappEnabled = toggle.classList.contains('active');
-        });
-
         // Proceed to payment
         document.getElementById('proceedPaymentBtn').addEventListener('click', handleBooking);
     }

@@ -128,7 +128,7 @@ public class BookingService {
                 .booking(savedBooking)
                 .amount(total)
                 .paymentStatus(PaymentStatus.SUCCESS)
-                .paymentMode("ONLINE")
+                .paymentMode("OFFLINE")
                 .transactionId("TXN" + UUID.randomUUID().toString().substring(0, 10).toUpperCase())
                 .paymentDate(LocalDateTime.now())
                 .build();
